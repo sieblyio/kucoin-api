@@ -53,7 +53,7 @@ This table includes all endpoints from the official Exchange API docs and corres
 | -------- | :------: | :------: | -------- |
 | [getMyIp()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L321) |  | GET | `api/v1/ip` |
 | [getServiceStatus()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L329) |  | GET | `api/v1/status` |
-| [getAccountSummary()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L344) | :closed_lock_with_key:  | GET | `api/v2/user-info` |
+| [getAccountSummary()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L344) | :closed_lock_with_key:  | GET | `api/v3/user-info` |
 | [getKYCRegions()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L353) | :closed_lock_with_key:  | GET | `api/kyc/regions/v4` |
 | [getApikeyInfo()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L363) | :closed_lock_with_key:  | GET | `api/v1/user/api-key` |
 | [getUserType()](https://github.com/sieblyio/kucoin-api/blob/master/src/SpotClient.ts#L372) | :closed_lock_with_key:  | GET | `api/v1/hf/accounts/opened` |

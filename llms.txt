@@ -49,6 +49,8 @@ Notes:
 Directory Structure
 ================================================================
 docs/
+  specs/
+    2026-11-03-kucoin-6-nov-api-updates.md
   KUCOIN_SDK_QUICKSTART_GUIDE.md
 examples/
   auth/
@@ -166,6 +168,124 @@ async function start()
    */
 ⋮----
 // If you later need to set a new access token (e.g. it expired):
+
+================
+File: examples/Rest/rest-futures-private-trade.ts
+================
+import { FuturesClient } from '../../src/index.ts';
+// import { FuturesClient } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+⋮----
+/**
+     * The trade amount indicates the amount of contract to buy or sell, and contract uses the base currency or lot as the trading unit.
+     * The trade amount must be no less than 1 lot for the contract and no larger than the maxOrderQty.
+     * It should be a multiple number of the lot, or the system will report an error when you place the order.
+     * E.g. 1 lot of XBTUSDTM is 0.001 Bitcoin, while 1 lot of XBTUSDM is 1 USD.
+     */
+⋮----
+// Submit a futures entry order for 1 lot of XBTUSDTM (0.001 bitcoin)
+
+================
+File: examples/Rest/rest-futures-public.ts
+================
+import { FuturesClient } from '../../src/index.ts';
+// import { FuturesClient } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+⋮----
+// Fetch all symbols
+⋮----
+// Fetch ticker for a specific symbol
+⋮----
+// Fetch klines for a specific symbol
+
+================
+File: examples/Rest/rest-spot-private-trade.ts
+================
+import { SpotClient } from '../../src/index.ts';
+// import { SpotClient } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+
+================
+File: examples/Rest/rest-spot-public.ts
+================
+import { SpotClient } from '../../src/index.ts';
+// import { SpotClient } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+⋮----
+// Fetch all symbols
+⋮----
+// Fetch ticker for a specific symbol
+⋮----
+// Fetch klines for a specific symbol
+
+================
+File: examples/WebSockets/WS-API/ws-api-raw-promises.ts
+================
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  DefaultLogger,
+  WebsocketClient,
+  WS_KEY_MAP,
+} from '../../../src/index.js';
+// import { DefaultLogger, WebsocketClient, WS_KEY_MAP } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+⋮----
+// Optional: inject a custom logger to override internal logging behaviour
+⋮----
+// Uncomment the below callback to introduce filtered trace logging in the WebsocketClient.
+// trace: (...params) => {
+//   if (
+//     [
+//       'Sending ping',
+//       // 'Sending upstream ws message: ',
+//       'Received pong',
+//     ].includes(params[0])
+//   ) {
+//     return;
+//   }
+//   console.log('trace', JSON.stringify(params, null, 2));
+// },
+⋮----
+passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT your account password
+⋮----
+// console.log('connecting with ', account);
+⋮----
+// logger,
+⋮----
+// Data received
+⋮----
+// Something happened, attempting to reconenct
+⋮----
+// Reconnect successful
+⋮----
+// Connection closed. If unexpected, expect reconnect -> reconnected.
+⋮----
+// Reply to a request, e.g. "subscribe"/"unsubscribe"/"authenticate"
+⋮----
+// console.info('response: ', data);
+⋮----
+/**
+   *
+   * Raw events can be routed via the sendWSAPIRequest in the WebsocketClient, as shown below.
+   * However, for a simpler integration, it is recommended to use the WebsocketAPIClient. The
+   * WebsocketAPIClient class is a wrapper around sendWSAPIRequest, with clear functions, typed
+   * requests and typed responses. The simpler WSAPIClient interface behaves much like a REST API
+   * wrapper, but all calls are routed via the WebSocket API.
+   *
+   * For a clearer example, refer to the "ws-api-client.ts" example found in this folder.
+   */
+⋮----
+price: '20000', // Very low price to avoid accidental execution
 
 ================
 File: examples/tsconfig.examples.json
@@ -2096,122 +2216,248 @@ File: tsconfig.esm.json
 }
 
 ================
-File: examples/Rest/rest-futures-private-trade.ts
+File: docs/specs/2026-11-03-kucoin-6-nov-api-updates.md
+================
+# KuCoin 6 Nov 2026 API updates
+
+## Goal
+
+Add the documented 6 Nov account summary, sub-account mode, and UTA private
+funding fee settlement changes to `update02112026`, retaining version 2.6.9.
+
+## Verified sources
+
+- [6 Nov changelog](https://www.kucoin.com/docs-new/change-log): confirms all three changes, including removal of every old sub-account quantity field and the three required V3 summary fields.
+- [Classic account summary V3](https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-summary-info-v3): `GET /api/v3/user-info`, returning numeric `level`, `maxSharedSubCount`, and `usedSharedSubCount`.
+- [UTA Add Sub Account](https://www.kucoin.com/docs-new/v2/rest/ua/add-sub-account) and [Classic Add Sub Account](https://www.kucoin.com/docs-new/rest/account-info/sub-account/add-sub-account): optional `mode`, accepting `CLASSIC` or `UNIFIED`.
+- [FundingFeeSettle](https://www.kucoin.com/docs-new/3470415w0): private `fundingFeeSettle` (with `symbol`) and `fundingFeeSettleAll` channels. Push data contains `s`, `mp`, `q`, `mM`, `sc`, `ft`, `ff`, `fr`, and `pV`.
+
+## Decisions
+
+- Replace `SpotAccountSummary` with the three required V3 fields and document the
+  6 Nov change. Update `getAccountSummary()` from `/api/v2/user-info` to the
+  documented `/api/v3/user-info` so its route matches its response type.
+- Add the optional mode union to both existing sub-account request interfaces.
+- Follow existing UTA push naming and envelope conventions. Export a settlement
+  topic union, push data, and push event. Preserve documented field casing and
+  string amounts; `P` and `ft` are numbers. Use `string` for `mM` because the
+  supplied event documentation does not enumerate all margin mode values.
+- Existing generic string subscriptions already handle both private channels;
+  verify serialization, private routing, and update emission without adding a
+  separate subscription API.
+- Use only mocked transports and local message processing. No production API
+  calls, workflow changes, generated documentation edits, or version bump.
+
+## Acceptance criteria
+
+- Summary requests use V3; the response type contains exactly the three required
+  fields, with no old quantity fields.
+- Both sub-account methods accept either mode or an omitted mode and preserve it
+  in the request. Other mode values fail TypeScript checking.
+- Both settlement topics serialize for subscribe/unsubscribe on `privateProV2`,
+  and documented event payloads reach update listeners unchanged.
+- Version remains 2.6.9. Add one new commit with the requested title and bullet
+  changelog; do not amend or push.
+
+## Test plan
+
+Write typed mocked REST and WebSocket regressions before implementation and
+confirm the missing types fail compilation. Run all offline unit tests, source
+and changed-test lint, TypeScript checking, and the CJS/ESM build. Skip live REST
+integration tests because they call production APIs. Record exact final commands
+and results here after validation.
+
+## Validation results
+
+- `npm ci --ignore-scripts --no-audit --no-fund --cache /tmp/kucoin-npm-cache`: passed; installed 477 packages.
+- `npm test -- --runInBand test/REST/account-updates.test.ts test/websockets/funding-fee-settle.test.ts`: failed before implementation as expected because the new summary fields, both mode properties, and settlement types were absent.
+- `npm test -- --runInBand test/REST/account-updates.test.ts test/REST/uta-orderbook.test.ts test/websockets`: final run passed, 6 suites / 56 tests. An earlier run found five incorrect test expectations about credential-free POST parameters and added WS metadata; those expectations were corrected. The existing error-frame test logs an expected console error.
+- `npm run lint`: passed, 0 errors / 51 existing source warnings.
+- `npx --no-install eslint test/REST/account-updates.test.ts test/websockets/funding-fee-settle.test.ts`: passed, 0 errors / 3 warnings for parameter names in the test's private-method type signature, matching the existing message test pattern.
+- `npx --no-install tsc --noEmit -p tsconfig.json`: passed.
+- `npm run build`: passed, including both ESM and CJS builds.
+- `git diff --check`: passed.
+
+All requested items were confirmed; none were skipped. Live public/private REST
+integration tests were not run because they call production APIs. The deliberate
+compatibility change is that `getAccountSummary()` now calls V3 and exposes shared
+quota counts instead of the old per-permission quantity fields.
+
+================
+File: examples/Rest/rest-futures-orders-guide.ts
 ================
 import { FuturesClient } from '../../src/index.ts';
 // import { FuturesClient } from 'kucoin-api';
 // normally you should install this module via npm: `npm install kucoin-api`
 ⋮----
 async function start()
+⋮----
+/**
+     * =======
+     * Credits for this guide go to user: @DKTradingClient / Code Nerd from the Kucoin API Telegram group!
+     * =======
+
+    /**
+     * Futures are contracts, not currencies. In the futures symbols list you will see a "multiplier" field for each of the symbols.
+     * Each contract equals to  Multiplier x Size
+     * For example:  https://api-futures.kucoin.com/api/v1/contracts/XRPUSDTM  - see the "multiplier" value.
+     * */
+⋮----
+/**
+     * E.g. if multiplier is 10(what you can see from the endpoint), that means each SIZE is 10 XRP. So if XRP is currently at $0.5,
+     * then each 1 contract (size 10) is going to cost $5.00
+     * size = (Funds x leverage) / (price x multiplier)
+     */
 ⋮----
 /**
      * The trade amount indicates the amount of contract to buy or sell, and contract uses the base currency or lot as the trading unit.
      * The trade amount must be no less than 1 lot for the contract and no larger than the maxOrderQty.
      * It should be a multiple number of the lot, or the system will report an error when you place the order.
      * E.g. 1 lot of XBTUSDTM is 0.001 Bitcoin, while 1 lot of XBTUSDM is 1 USD.
+     * or check the XRPUSDTM example above.
+     *
+     * Here are function examples using the Futures Create Order endpoint:
      */
 ⋮----
-// Submit a futures entry order for 1 lot of XBTUSDTM (0.001 bitcoin)
+// A MARKET SHORT of 2 contracts of XBT using leverage of 5:
+⋮----
+// A MARKET LONG of 2 contracts of XBT using leverage of 5:
+⋮----
+// A LIMIT SHORT of 2 contracts of XBT using leverage of 5:
+⋮----
+// A LIMIT LONG of 2 contracts of XBT using leverage of 5:
+⋮----
+// On any "close position" action, if you specify a SIZE=0 or leave off the SIZE parameter,
+// then it will close the whole position, regardless of the size.
+// If you specify a SIZE, it will close only the number of contracts you specify.
+⋮----
+// If closeOrder is set to TRUE,
+// the system will close the position and the position size will become 0.
+// Side, Size and Leverage fields can be left empty and the system will determine the side and size automatically.
+⋮----
+// A MARKET CLOSE POSITION example:
+⋮----
+// A LIMIT CLOSE of a LONG example:
+⋮----
+// A LIMIT CLOSE of a SHORT example:
+⋮----
+// A STOP LOSS example for a LONG position:
+⋮----
+// A STOP LOSS example for a SHORT position:
 
 ================
-File: examples/Rest/rest-futures-public.ts
+File: examples/WebSockets/WS-API/ws-api-client.ts
 ================
-import { FuturesClient } from '../../src/index.ts';
-// import { FuturesClient } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
+/**
+ * KuCoin WebSocket API Client - Complete Example
+ *
+ * This example demonstrates all available WebSocket API operations:
+ * - Spot trading: submit, modify, cancel, sync operations
+ * - Margin trading: submit and cancel orders
+ * - Futures trading: submit, cancel, batch operations, UTA amend
+ *
+ * Usage:
+ * Make sure to set your API credentials in environment variables:
+ *    - API_KEY
+ *    - API_SECRET
+ *    - API_PASSPHRASE
+ *
+ *  or pass them as arguments to the constructor
+ */
 ⋮----
-async function start()
+import { DefaultLogger, WebsocketAPIClient } from '../../../src/index.js';
 ⋮----
-// Fetch all symbols
+async function main()
 ⋮----
-// Fetch ticker for a specific symbol
-⋮----
-// Fetch klines for a specific symbol
-
-================
-File: examples/Rest/rest-spot-private-trade.ts
-================
-import { SpotClient } from '../../src/index.ts';
-// import { SpotClient } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
-⋮----
-async function start()
-
-================
-File: examples/Rest/rest-spot-public.ts
-================
-import { SpotClient } from '../../src/index.ts';
-// import { SpotClient } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
-⋮----
-async function start()
-⋮----
-// Fetch all symbols
-⋮----
-// Fetch ticker for a specific symbol
-⋮----
-// Fetch klines for a specific symbol
-
-================
-File: examples/WebSockets/WS-API/ws-api-raw-promises.ts
-================
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  DefaultLogger,
-  WebsocketClient,
-  WS_KEY_MAP,
-} from '../../../src/index.js';
-// import { DefaultLogger, WebsocketClient, WS_KEY_MAP } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
-⋮----
-async function start()
-⋮----
-// Optional: inject a custom logger to override internal logging behaviour
-⋮----
-// Uncomment the below callback to introduce filtered trace logging in the WebsocketClient.
-// trace: (...params) => {
-//   if (
-//     [
-//       'Sending ping',
-//       // 'Sending upstream ws message: ',
-//       'Received pong',
-//     ].includes(params[0])
-//   ) {
-//     return;
-//   }
-//   console.log('trace', JSON.stringify(params, null, 2));
-// },
+// For a more detailed view of the WebsocketClient, enable the `trace` level by uncommenting the below line:
+// trace: (...params) => console.log(new Date(), 'trace', ...params),
 ⋮----
 passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT your account password
 ⋮----
-// console.log('connecting with ', account);
+// If you want your own event handlers instead of the default ones with logs, disable this setting and see the `attachEventHandlers` example below:
+// attachEventListeners: false
 ⋮----
-// logger,
+// Example usage for each WebSocket API operation
 ⋮----
-// Data received
-⋮----
-// Something happened, attempting to reconenct
-⋮----
-// Reconnect successful
-⋮----
-// Connection closed. If unexpected, expect reconnect -> reconnected.
-⋮----
-// Reply to a request, e.g. "subscribe"/"unsubscribe"/"authenticate"
-⋮----
-// console.info('response: ', data);
-⋮----
-/**
-   *
-   * Raw events can be routed via the sendWSAPIRequest in the WebsocketClient, as shown below.
-   * However, for a simpler integration, it is recommended to use the WebsocketAPIClient. The
-   * WebsocketAPIClient class is a wrapper around sendWSAPIRequest, with clear functions, typed
-   * requests and typed responses. The simpler WSAPIClient interface behaves much like a REST API
-   * wrapper, but all calls are routed via the WebSocket API.
-   *
-   * For a clearer example, refer to the "ws-api-client.ts" example found in this folder.
-   */
+// 1. Submit Spot Order
 ⋮----
 price: '20000', // Very low price to avoid accidental execution
+⋮----
+// 2. Submit Sync Spot Order
+⋮----
+price: '1000', // Very high price to avoid accidental execution
+⋮----
+// 3. Modify Spot Order (requires existing order ID)
+⋮----
+orderId: '68cc3476693c1c00072ef1d9', // Replace with actual order ID
+⋮----
+// 4. Cancel Spot Order
+⋮----
+orderId: '68cc34c6693c1c0007301929', // Replace with actual order ID
+⋮----
+// 5. Cancel Sync Spot Order
+⋮----
+orderId: '68cc3530b9870a0007670294', // Replace with actual client order ID
+⋮----
+// 6. Submit Margin Order
+⋮----
+price: '19000', // Very low price to avoid accidental execution
+⋮----
+isIsolated: false, // false for cross margin, true for isolated
+⋮----
+// 7. Cancel Margin Order
+⋮----
+orderId: 'your-margin-order-id-here', // Replace with actual order ID
+⋮----
+// 8. Submit Futures Order
+⋮----
+price: '1000', // Very low price to avoid accidental execution
+⋮----
+positionSide: 'LONG', // needed if trading two-way (hedge) position mode
+⋮----
+// 9. Cancel Futures Order
+⋮----
+orderId: '358196976308797441', // Replace with actual order ID
+⋮----
+// 10. Submit Multiple Futures Orders
+⋮----
+price: '1000', // Very low price to avoid accidental execution
+⋮----
+positionSide: 'LONG', // Needed if trading hedge/two-way mode. Optional in one-way mode.
+⋮----
+price: '1010', // Very low price to avoid accidental execution
+⋮----
+// 11. Amend UTA Futures Order
+⋮----
+orderId: '358196976308797441', // Replace with actual order ID
+⋮----
+// 12. Cancel Multiple Futures Orders
+⋮----
+orderIdsList: ['order-id-1', 'order-id-2'], // Replace with actual order IDs
+⋮----
+// Start executing the example workflow
+
+================
+File: examples/WebSockets/README.md
+================
+# WebSocket Subscriptions
+
+The examples in this folder demonstrate how to connect to KuCoin WebSockets using Node.js, JavaScript & TypeScript, to receive realtime events from either account updates or market data.
+
+## Versions
+
+### V1
+
+This is the current / end of life generation of KuCoin's APIs. The old API docs can be found here:
+https://www.kucoin.com/docs-new
+
+Examples for this version are labelled with "v1" and tend to use the "v1" WsKeys (meaning they use the endpoints and WebSocket domains for the V1 APIs)
+
+### V2 / Pro / Unified / UTA
+
+The new generation of KuCoin's APIs. It was briefly named Unified Trading APIs (UTA), but has more recently been renamed to KuCoin Pro APIs.
+
+All examples for this version are labelled with "v2" and tend to use the "v2" WsKeys. Private WebSocket topics in KuCoin's V2 Pro APIs also share 1 connection (via the "privateProV2" WsKey). Previously in v1 these were split across two different connections.
 
 ================
 File: examples/WebSockets/ws-private-futures-v1.ts
@@ -2904,100 +3150,6 @@ export interface CopyTradeSwitchPositionModeRequest {
 }
 ⋮----
 positionMode: '0' | '1'; // 0 = one-way mode, 1 = hedge mode
-
-================
-File: src/types/request/spot-account.ts
-================
-export interface GetBalancesRequest {
-  currency?: string;
-  type?: 'main' | 'trade';
-}
-⋮----
-export interface GetSpotTransactionsRequest {
-  currency?: string;
-  direction?: 'in' | 'out';
-  bizType?:
-    | 'DEPOSIT'
-    | 'WITHDRAW'
-    | 'TRANSFER'
-    | 'SUB_TRANSFER'
-    | 'TRADE_EXCHANGE'
-    | 'MARGIN_EXCHANGE'
-    | 'KUCOIN_BONUS'
-    | 'BROKER_TRANSFER'
-    | 'REBATE';
-  startAt?: number;
-  endAt?: number;
-  currentPage?: number;
-  pageSize?: number;
-}
-⋮----
-export interface AccountHFTransactionsRequest {
-  currency?: string;
-  direction?: 'in' | 'out';
-  bizType?:
-    | 'TRANSFER'
-    | 'TRADE_EXCHANGE'
-    | 'RETURNED_FEES'
-    | 'DEDUCTION_FEES'
-    | 'OTHER';
-  lastId?: number;
-  limit?: number;
-  startAt?: number;
-  endAt?: number;
-}
-⋮----
-export interface AccountHFMarginTransactionsRequest {
-  currency?: string;
-  direction?: 'in' | 'out';
-  bizType?:
-    | 'TRANSFER'
-    | 'MARGIN_EXCHANGE'
-    | 'ISOLATED_EXCHANGE'
-    | 'LIQUIDATION'
-    | 'ASSERT_RETURN';
-  lastId?: number;
-  limit?: number;
-  startAt?: number;
-  endAt?: number;
-}
-⋮----
-export interface CreateSubAccountRequest {
-  password: string;
-  remarks?: string;
-  subName: string;
-  access: string;
-}
-⋮----
-export interface CreateSubAccountAPIRequest {
-  subName: string;
-  passphrase: string;
-  remark: string;
-  permission?: string;
-  /** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
-  ipWhitelist?: string;
-  expire?: string;
-}
-⋮----
-/** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
-⋮----
-export interface UpdateSubAccountAPIRequest {
-  subName: string;
-  apiKey: string;
-  passphrase: string;
-  permission?: string;
-  /** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
-  ipWhitelist?: string;
-  expire?: string;
-}
-⋮----
-/** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
-⋮----
-export interface DeleteSubAccountAPIRequest {
-  apiKey: string;
-  passphrase: string;
-  subName: string;
-}
 
 ================
 File: src/types/request/spot-funding.ts
@@ -3905,281 +4057,6 @@ export interface GetOCOOrdersRequest {
   endAt?: number;
   orderIds?: string;
 }
-
-================
-File: src/types/response/spot-account.ts
-================
-export interface SpotAccountSummary {
-  level: number;
-  subQuantity: number;
-  spotSubQuantity: number;
-  marginSubQuantity: number;
-  futuresSubQuantity: number;
-  optionSubQuantity: number;
-  maxSubQuantity: number;
-  maxDefaultSubQuantity: number;
-  maxSpotSubQuantity: number;
-  maxMarginSubQuantity: number;
-  maxFuturesSubQuantity: number;
-  maxOptionSubQuantity: number;
-}
-⋮----
-export interface Balances {
-  id: string;
-  currency: string;
-  type: 'main' | 'trade';
-  balance: string;
-  available: string;
-  holds: string;
-}
-⋮----
-export interface Account {
-  currency: string;
-  balance: string;
-  available: string;
-  holds: string;
-}
-⋮----
-export interface SpotAccountTransaction {
-  id: string;
-  currency: string;
-  amount: string;
-  fee: string;
-  tax: string;
-  balance: string;
-  accountType: string; // 'TRADE_HF'
-  bizType: string;
-  direction: 'out' | 'in';
-  createdAt: string;
-  context: string;
-}
-⋮----
-accountType: string; // 'TRADE_HF'
-⋮----
-export interface SpotAccountTransactions {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: SpotAccountTransaction[];
-}
-⋮----
-export interface AccountHFMarginTransactions {
-  id: string;
-  currency: string;
-  amount: string;
-  fee: string;
-  balance: string;
-  /** Migrating from MARGIN_V2/ISOLATED_V2 to MARGIN/ISOLATED per SPOT Margin HF migration */
-  accountType: 'MARGIN' | 'ISOLATED' | 'MARGIN_V2' | 'ISOLATED_V2';
-  bizType:
-    | 'TRANSFER'
-    | 'MARGIN_EXCHANGE'
-    | 'ISOLATED_EXCHANGE'
-    | 'LIQUIDATION'
-    | 'ASSERT_RETURN';
-  direction: 'out' | 'in';
-  createdAt: string;
-  tax: string;
-  context: string;
-}
-⋮----
-/** Migrating from MARGIN_V2/ISOLATED_V2 to MARGIN/ISOLATED per SPOT Margin HF migration */
-⋮----
-/**
- *
- * Sub-Account
- *
- */
-⋮----
-export interface SubAccountInfo {
-  userId: string;
-  uid: number;
-  subName: string;
-  status: number;
-  type: number;
-  access: string;
-  createdAt: number;
-  remarks: string;
-  tradeTypes: string[];
-  openedTradeTypes: string[];
-  hostedStatus: null | string;
-}
-⋮----
-export interface SubAccountsV2 {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: SubAccountInfo[];
-}
-⋮----
-export interface SubAccountItem {
-  userId: string;
-  uid: number;
-  subName: string;
-  status: number;
-  type: number;
-  access: string;
-  createdAt: number;
-  remarks: string;
-  tradeTypes: string[];
-  openedTradeTypes: string[];
-  hostedStatus: null | string;
-}
-⋮----
-export interface CreateSubAccount {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: SubAccountItem[];
-}
-⋮----
-export interface SubAccountBalance {
-  currency: string;
-  balance: string;
-  available: string;
-  holds: string;
-  baseCurrency: string;
-  baseCurrencyPrice: string;
-  baseAmount: string;
-}
-⋮----
-// deprecated
-export interface SubAccountBalances {
-  subUserId: string;
-  subName: string;
-  mainAccounts: SubAccountBalance[];
-  tradeAccounts: SubAccountBalance[];
-  marginAccounts: SubAccountBalance[];
-}
-⋮----
-export interface SubAccountBalancesV2 {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: {
-    subUserId: string;
-    subName: string;
-    mainAccounts: SubAccountBalance[];
-  }[];
-}
-export interface SubAccountV2Details {
-  currency?: string;
-  balance?: string;
-  available?: string;
-  holds?: string;
-  baseCurrency?: string;
-  baseCurrencyPrice?: string;
-  baseAmount?: string;
-  tag?: string;
-}
-⋮----
-export interface SubAccountBalanceItemV2 {
-  subUserId: string;
-  subName: string;
-  mainAccounts: SubAccountV2Details[]; // Funding Account
-  tradeAccounts: SubAccountV2Details[]; // Spot Account
-  marginAccounts: SubAccountV2Details[]; // Margin Account
-  tradeHFAccounts: string[]; // Deprecated, only for old users
-}
-⋮----
-mainAccounts: SubAccountV2Details[]; // Funding Account
-tradeAccounts: SubAccountV2Details[]; // Spot Account
-marginAccounts: SubAccountV2Details[]; // Margin Account
-tradeHFAccounts: string[]; // Deprecated, only for old users
-⋮----
-/**
- *
- * Sub-Account API
- *
- *
- */
-⋮----
-export interface SubAccountAPIInfo {
-  subName: string;
-  remark: string;
-  apiKey: string;
-  apiVersion: number;
-  permission: string;
-  ipWhitelist: string;
-  createdAt: number;
-  uid: number;
-  isMaster: boolean;
-}
-⋮----
-export interface CreateSubAPI {
-  subName: string;
-  remark: string;
-  apiKey: string;
-  apiSecret: string;
-  apiVersion: number;
-  passphrase: string;
-  permission: string;
-  createdAt: number;
-}
-⋮----
-export interface UpdateSubAPI {
-  apiKey: string;
-  ipWhitelist: string;
-  permission: string;
-  subName: string;
-}
-⋮----
-export interface DeleteSubAccountAPI {
-  subName: string;
-  apiKey: string;
-}
-⋮----
-/**
- * Get KYC Regions Response
- */
-export interface KYCRegion {
-  code: string; // Two-letter country code
-  enName: string; // English name of the region
-}
-⋮----
-code: string; // Two-letter country code
-enName: string; // English name of the region
-⋮----
-/**
- * Get API Key Info Response
- */
-export interface ApiKeyInfo {
-  uid: number; // Account UID
-  parentUid?: number; // Master account UID. Returns empty when called by the master account itself
-  region: string; // KYC region of the account, returns the two-letter country code
-  kycStatus: 0 | 1; // KYC status
-  subName?: string; // Sub-account name (not present for the master account)
-  remark: string; // Remarks
-  apiKey: string; // API key
-  apiVersion: number; // API version
-  permission: string; // Permissions
-  ipWhitelist?: string; // IP whitelist (comma-separated list of allowed IPs)
-  isMaster: boolean; // Indicates whether this is the master account
-  createdAt: number; // API key creation timestamp (Unix milliseconds)
-  expiredAt?: number | null; // API key expiration timestamp (Unix milliseconds). Returns null if no expiration is set
-  thirdPartyApp?: string; // Third-party application name. Returns empty string if not associated with any third-party app
-  siteType?: 'global' | 'turkey' | 'australia' | 'europe' | 'thailand'; // Site Type
-}
-⋮----
-uid: number; // Account UID
-parentUid?: number; // Master account UID. Returns empty when called by the master account itself
-region: string; // KYC region of the account, returns the two-letter country code
-kycStatus: 0 | 1; // KYC status
-subName?: string; // Sub-account name (not present for the master account)
-remark: string; // Remarks
-apiKey: string; // API key
-apiVersion: number; // API version
-permission: string; // Permissions
-ipWhitelist?: string; // IP whitelist (comma-separated list of allowed IPs)
-isMaster: boolean; // Indicates whether this is the master account
-createdAt: number; // API key creation timestamp (Unix milliseconds)
-expiredAt?: number | null; // API key expiration timestamp (Unix milliseconds). Returns null if no expiration is set
-thirdPartyApp?: string; // Third-party application name. Returns empty string if not associated with any third-party app
-siteType?: 'global' | 'turkey' | 'australia' | 'europe' | 'thailand'; // Site Type
 
 ================
 File: src/types/response/spot-funding.ts
@@ -5407,182 +5284,6 @@ function setWsClientEventListeners(
 // Simple promise to ensure we're subscribed before trying anything else
 ⋮----
 // Start trading
-
-================
-File: examples/Rest/rest-futures-orders-guide.ts
-================
-import { FuturesClient } from '../../src/index.ts';
-// import { FuturesClient } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
-⋮----
-async function start()
-⋮----
-/**
-     * =======
-     * Credits for this guide go to user: @DKTradingClient / Code Nerd from the Kucoin API Telegram group!
-     * =======
-
-    /**
-     * Futures are contracts, not currencies. In the futures symbols list you will see a "multiplier" field for each of the symbols.
-     * Each contract equals to  Multiplier x Size
-     * For example:  https://api-futures.kucoin.com/api/v1/contracts/XRPUSDTM  - see the "multiplier" value.
-     * */
-⋮----
-/**
-     * E.g. if multiplier is 10(what you can see from the endpoint), that means each SIZE is 10 XRP. So if XRP is currently at $0.5,
-     * then each 1 contract (size 10) is going to cost $5.00
-     * size = (Funds x leverage) / (price x multiplier)
-     */
-⋮----
-/**
-     * The trade amount indicates the amount of contract to buy or sell, and contract uses the base currency or lot as the trading unit.
-     * The trade amount must be no less than 1 lot for the contract and no larger than the maxOrderQty.
-     * It should be a multiple number of the lot, or the system will report an error when you place the order.
-     * E.g. 1 lot of XBTUSDTM is 0.001 Bitcoin, while 1 lot of XBTUSDM is 1 USD.
-     * or check the XRPUSDTM example above.
-     *
-     * Here are function examples using the Futures Create Order endpoint:
-     */
-⋮----
-// A MARKET SHORT of 2 contracts of XBT using leverage of 5:
-⋮----
-// A MARKET LONG of 2 contracts of XBT using leverage of 5:
-⋮----
-// A LIMIT SHORT of 2 contracts of XBT using leverage of 5:
-⋮----
-// A LIMIT LONG of 2 contracts of XBT using leverage of 5:
-⋮----
-// On any "close position" action, if you specify a SIZE=0 or leave off the SIZE parameter,
-// then it will close the whole position, regardless of the size.
-// If you specify a SIZE, it will close only the number of contracts you specify.
-⋮----
-// If closeOrder is set to TRUE,
-// the system will close the position and the position size will become 0.
-// Side, Size and Leverage fields can be left empty and the system will determine the side and size automatically.
-⋮----
-// A MARKET CLOSE POSITION example:
-⋮----
-// A LIMIT CLOSE of a LONG example:
-⋮----
-// A LIMIT CLOSE of a SHORT example:
-⋮----
-// A STOP LOSS example for a LONG position:
-⋮----
-// A STOP LOSS example for a SHORT position:
-
-================
-File: examples/WebSockets/WS-API/ws-api-client.ts
-================
-/**
- * KuCoin WebSocket API Client - Complete Example
- *
- * This example demonstrates all available WebSocket API operations:
- * - Spot trading: submit, modify, cancel, sync operations
- * - Margin trading: submit and cancel orders
- * - Futures trading: submit, cancel, batch operations, UTA amend
- *
- * Usage:
- * Make sure to set your API credentials in environment variables:
- *    - API_KEY
- *    - API_SECRET
- *    - API_PASSPHRASE
- *
- *  or pass them as arguments to the constructor
- */
-⋮----
-import { DefaultLogger, WebsocketAPIClient } from '../../../src/index.js';
-⋮----
-async function main()
-⋮----
-// For a more detailed view of the WebsocketClient, enable the `trace` level by uncommenting the below line:
-// trace: (...params) => console.log(new Date(), 'trace', ...params),
-⋮----
-passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT your account password
-⋮----
-// If you want your own event handlers instead of the default ones with logs, disable this setting and see the `attachEventHandlers` example below:
-// attachEventListeners: false
-⋮----
-// Example usage for each WebSocket API operation
-⋮----
-// 1. Submit Spot Order
-⋮----
-price: '20000', // Very low price to avoid accidental execution
-⋮----
-// 2. Submit Sync Spot Order
-⋮----
-price: '1000', // Very high price to avoid accidental execution
-⋮----
-// 3. Modify Spot Order (requires existing order ID)
-⋮----
-orderId: '68cc3476693c1c00072ef1d9', // Replace with actual order ID
-⋮----
-// 4. Cancel Spot Order
-⋮----
-orderId: '68cc34c6693c1c0007301929', // Replace with actual order ID
-⋮----
-// 5. Cancel Sync Spot Order
-⋮----
-orderId: '68cc3530b9870a0007670294', // Replace with actual client order ID
-⋮----
-// 6. Submit Margin Order
-⋮----
-price: '19000', // Very low price to avoid accidental execution
-⋮----
-isIsolated: false, // false for cross margin, true for isolated
-⋮----
-// 7. Cancel Margin Order
-⋮----
-orderId: 'your-margin-order-id-here', // Replace with actual order ID
-⋮----
-// 8. Submit Futures Order
-⋮----
-price: '1000', // Very low price to avoid accidental execution
-⋮----
-positionSide: 'LONG', // needed if trading two-way (hedge) position mode
-⋮----
-// 9. Cancel Futures Order
-⋮----
-orderId: '358196976308797441', // Replace with actual order ID
-⋮----
-// 10. Submit Multiple Futures Orders
-⋮----
-price: '1000', // Very low price to avoid accidental execution
-⋮----
-positionSide: 'LONG', // Needed if trading hedge/two-way mode. Optional in one-way mode.
-⋮----
-price: '1010', // Very low price to avoid accidental execution
-⋮----
-// 11. Amend UTA Futures Order
-⋮----
-orderId: '358196976308797441', // Replace with actual order ID
-⋮----
-// 12. Cancel Multiple Futures Orders
-⋮----
-orderIdsList: ['order-id-1', 'order-id-2'], // Replace with actual order IDs
-⋮----
-// Start executing the example workflow
-
-================
-File: examples/WebSockets/README.md
-================
-# WebSocket Subscriptions
-
-The examples in this folder demonstrate how to connect to KuCoin WebSockets using Node.js, JavaScript & TypeScript, to receive realtime events from either account updates or market data.
-
-## Versions
-
-### V1
-
-This is the current / end of life generation of KuCoin's APIs. The old API docs can be found here:
-https://www.kucoin.com/docs-new
-
-Examples for this version are labelled with "v1" and tend to use the "v1" WsKeys (meaning they use the endpoints and WebSocket domains for the V1 APIs)
-
-### V2 / Pro / Unified / UTA
-
-The new generation of KuCoin's APIs. It was briefly named Unified Trading APIs (UTA), but has more recently been renamed to KuCoin Pro APIs.
-
-All examples for this version are labelled with "v2" and tend to use the "v2" WsKeys. Private WebSocket topics in KuCoin's V2 Pro APIs also share 1 connection (via the "privateProV2" WsKey). Previously in v1 these were split across two different connections.
 
 ================
 File: examples/kucoin-UNIFIED-examples-nodejs.md
@@ -6953,6 +6654,101 @@ public async assertIsAuthenticated(wsKey: TWSKey): Promise<unknown>
 // this.logger.trace('assertIsAuthenticated(): newly authenticated!');
 
 ================
+File: src/types/request/spot-account.ts
+================
+export interface GetBalancesRequest {
+  currency?: string;
+  type?: 'main' | 'trade';
+}
+⋮----
+export interface GetSpotTransactionsRequest {
+  currency?: string;
+  direction?: 'in' | 'out';
+  bizType?:
+    | 'DEPOSIT'
+    | 'WITHDRAW'
+    | 'TRANSFER'
+    | 'SUB_TRANSFER'
+    | 'TRADE_EXCHANGE'
+    | 'MARGIN_EXCHANGE'
+    | 'KUCOIN_BONUS'
+    | 'BROKER_TRANSFER'
+    | 'REBATE';
+  startAt?: number;
+  endAt?: number;
+  currentPage?: number;
+  pageSize?: number;
+}
+⋮----
+export interface AccountHFTransactionsRequest {
+  currency?: string;
+  direction?: 'in' | 'out';
+  bizType?:
+    | 'TRANSFER'
+    | 'TRADE_EXCHANGE'
+    | 'RETURNED_FEES'
+    | 'DEDUCTION_FEES'
+    | 'OTHER';
+  lastId?: number;
+  limit?: number;
+  startAt?: number;
+  endAt?: number;
+}
+⋮----
+export interface AccountHFMarginTransactionsRequest {
+  currency?: string;
+  direction?: 'in' | 'out';
+  bizType?:
+    | 'TRANSFER'
+    | 'MARGIN_EXCHANGE'
+    | 'ISOLATED_EXCHANGE'
+    | 'LIQUIDATION'
+    | 'ASSERT_RETURN';
+  lastId?: number;
+  limit?: number;
+  startAt?: number;
+  endAt?: number;
+}
+⋮----
+export interface CreateSubAccountRequest {
+  password: string;
+  remarks?: string;
+  subName: string;
+  access: string;
+  mode?: 'CLASSIC' | 'UNIFIED';
+}
+⋮----
+export interface CreateSubAccountAPIRequest {
+  subName: string;
+  passphrase: string;
+  remark: string;
+  permission?: string;
+  /** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
+  ipWhitelist?: string;
+  expire?: string;
+}
+⋮----
+/** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
+⋮----
+export interface UpdateSubAccountAPIRequest {
+  subName: string;
+  apiKey: string;
+  passphrase: string;
+  permission?: string;
+  /** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
+  ipWhitelist?: string;
+  expire?: string;
+}
+⋮----
+/** Required when permission includes Transfer (Withdraw); optional otherwise (as of 2026.08.12) */
+⋮----
+export interface DeleteSubAccountAPIRequest {
+  apiKey: string;
+  passphrase: string;
+  subName: string;
+}
+
+================
 File: src/types/response/futures.types.ts
 ================
 /**
@@ -7915,6 +7711,277 @@ export interface CopyTradeSwitchPositionModeResponse {
 }
 ⋮----
 positionMode: '0' | '1'; // 0 = one-way mode, 1 = hedge mode
+
+================
+File: src/types/response/spot-account.ts
+================
+/**
+ * Classic account summary V3 (2026.11.06).
+ * Replaces sub-account quantity fields with shared sub-account quota counts.
+ * @see https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-summary-info-v3
+ */
+export interface SpotAccountSummary {
+  level: number;
+  maxSharedSubCount: number;
+  usedSharedSubCount: number;
+}
+⋮----
+export interface Balances {
+  id: string;
+  currency: string;
+  type: 'main' | 'trade';
+  balance: string;
+  available: string;
+  holds: string;
+}
+⋮----
+export interface Account {
+  currency: string;
+  balance: string;
+  available: string;
+  holds: string;
+}
+⋮----
+export interface SpotAccountTransaction {
+  id: string;
+  currency: string;
+  amount: string;
+  fee: string;
+  tax: string;
+  balance: string;
+  accountType: string; // 'TRADE_HF'
+  bizType: string;
+  direction: 'out' | 'in';
+  createdAt: string;
+  context: string;
+}
+⋮----
+accountType: string; // 'TRADE_HF'
+⋮----
+export interface SpotAccountTransactions {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: SpotAccountTransaction[];
+}
+⋮----
+export interface AccountHFMarginTransactions {
+  id: string;
+  currency: string;
+  amount: string;
+  fee: string;
+  balance: string;
+  /** Migrating from MARGIN_V2/ISOLATED_V2 to MARGIN/ISOLATED per SPOT Margin HF migration */
+  accountType: 'MARGIN' | 'ISOLATED' | 'MARGIN_V2' | 'ISOLATED_V2';
+  bizType:
+    | 'TRANSFER'
+    | 'MARGIN_EXCHANGE'
+    | 'ISOLATED_EXCHANGE'
+    | 'LIQUIDATION'
+    | 'ASSERT_RETURN';
+  direction: 'out' | 'in';
+  createdAt: string;
+  tax: string;
+  context: string;
+}
+⋮----
+/** Migrating from MARGIN_V2/ISOLATED_V2 to MARGIN/ISOLATED per SPOT Margin HF migration */
+⋮----
+/**
+ *
+ * Sub-Account
+ *
+ */
+⋮----
+export interface SubAccountInfo {
+  userId: string;
+  uid: number;
+  subName: string;
+  status: number;
+  type: number;
+  access: string;
+  createdAt: number;
+  remarks: string;
+  tradeTypes: string[];
+  openedTradeTypes: string[];
+  hostedStatus: null | string;
+}
+⋮----
+export interface SubAccountsV2 {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: SubAccountInfo[];
+}
+⋮----
+export interface SubAccountItem {
+  userId: string;
+  uid: number;
+  subName: string;
+  status: number;
+  type: number;
+  access: string;
+  createdAt: number;
+  remarks: string;
+  tradeTypes: string[];
+  openedTradeTypes: string[];
+  hostedStatus: null | string;
+}
+⋮----
+export interface CreateSubAccount {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: SubAccountItem[];
+}
+⋮----
+export interface SubAccountBalance {
+  currency: string;
+  balance: string;
+  available: string;
+  holds: string;
+  baseCurrency: string;
+  baseCurrencyPrice: string;
+  baseAmount: string;
+}
+⋮----
+// deprecated
+export interface SubAccountBalances {
+  subUserId: string;
+  subName: string;
+  mainAccounts: SubAccountBalance[];
+  tradeAccounts: SubAccountBalance[];
+  marginAccounts: SubAccountBalance[];
+}
+⋮----
+export interface SubAccountBalancesV2 {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: {
+    subUserId: string;
+    subName: string;
+    mainAccounts: SubAccountBalance[];
+  }[];
+}
+export interface SubAccountV2Details {
+  currency?: string;
+  balance?: string;
+  available?: string;
+  holds?: string;
+  baseCurrency?: string;
+  baseCurrencyPrice?: string;
+  baseAmount?: string;
+  tag?: string;
+}
+⋮----
+export interface SubAccountBalanceItemV2 {
+  subUserId: string;
+  subName: string;
+  mainAccounts: SubAccountV2Details[]; // Funding Account
+  tradeAccounts: SubAccountV2Details[]; // Spot Account
+  marginAccounts: SubAccountV2Details[]; // Margin Account
+  tradeHFAccounts: string[]; // Deprecated, only for old users
+}
+⋮----
+mainAccounts: SubAccountV2Details[]; // Funding Account
+tradeAccounts: SubAccountV2Details[]; // Spot Account
+marginAccounts: SubAccountV2Details[]; // Margin Account
+tradeHFAccounts: string[]; // Deprecated, only for old users
+⋮----
+/**
+ *
+ * Sub-Account API
+ *
+ *
+ */
+⋮----
+export interface SubAccountAPIInfo {
+  subName: string;
+  remark: string;
+  apiKey: string;
+  apiVersion: number;
+  permission: string;
+  ipWhitelist: string;
+  createdAt: number;
+  uid: number;
+  isMaster: boolean;
+}
+⋮----
+export interface CreateSubAPI {
+  subName: string;
+  remark: string;
+  apiKey: string;
+  apiSecret: string;
+  apiVersion: number;
+  passphrase: string;
+  permission: string;
+  createdAt: number;
+}
+⋮----
+export interface UpdateSubAPI {
+  apiKey: string;
+  ipWhitelist: string;
+  permission: string;
+  subName: string;
+}
+⋮----
+export interface DeleteSubAccountAPI {
+  subName: string;
+  apiKey: string;
+}
+⋮----
+/**
+ * Get KYC Regions Response
+ */
+export interface KYCRegion {
+  code: string; // Two-letter country code
+  enName: string; // English name of the region
+}
+⋮----
+code: string; // Two-letter country code
+enName: string; // English name of the region
+⋮----
+/**
+ * Get API Key Info Response
+ */
+export interface ApiKeyInfo {
+  uid: number; // Account UID
+  parentUid?: number; // Master account UID. Returns empty when called by the master account itself
+  region: string; // KYC region of the account, returns the two-letter country code
+  kycStatus: 0 | 1; // KYC status
+  subName?: string; // Sub-account name (not present for the master account)
+  remark: string; // Remarks
+  apiKey: string; // API key
+  apiVersion: number; // API version
+  permission: string; // Permissions
+  ipWhitelist?: string; // IP whitelist (comma-separated list of allowed IPs)
+  isMaster: boolean; // Indicates whether this is the master account
+  createdAt: number; // API key creation timestamp (Unix milliseconds)
+  expiredAt?: number | null; // API key expiration timestamp (Unix milliseconds). Returns null if no expiration is set
+  thirdPartyApp?: string; // Third-party application name. Returns empty string if not associated with any third-party app
+  siteType?: 'global' | 'turkey' | 'australia' | 'europe' | 'thailand'; // Site Type
+}
+⋮----
+uid: number; // Account UID
+parentUid?: number; // Master account UID. Returns empty when called by the master account itself
+region: string; // KYC region of the account, returns the two-letter country code
+kycStatus: 0 | 1; // KYC status
+subName?: string; // Sub-account name (not present for the master account)
+remark: string; // Remarks
+apiKey: string; // API key
+apiVersion: number; // API version
+permission: string; // Permissions
+ipWhitelist?: string; // IP whitelist (comma-separated list of allowed IPs)
+isMaster: boolean; // Indicates whether this is the master account
+createdAt: number; // API key creation timestamp (Unix milliseconds)
+expiredAt?: number | null; // API key expiration timestamp (Unix milliseconds). Returns null if no expiration is set
+thirdPartyApp?: string; // Third-party application name. Returns empty string if not associated with any third-party app
+siteType?: 'global' | 'turkey' | 'australia' | 'europe' | 'thailand'; // Site Type
 
 ================
 File: src/types/websockets/ws-api.ts
@@ -9676,257 +9743,6 @@ export interface GetBrokerMarkupFeeResponse {
 }
 
 ================
-File: src/types/websockets/ws-events.ts
-================
-export interface WsDataEvent<TData = any, TWSKey = string> {
-  data: TData;
-  table: string;
-  wsKey: TWSKey;
-}
-⋮----
-export interface MessageEventLike<TDataType = string> {
-  target: WebSocket;
-  type: 'message';
-  data: TDataType;
-}
-⋮----
-export function isMessageEvent(msg: unknown): msg is MessageEventLike
-⋮----
-/**
- * UTA WebSocket private balance push (`channel: balance`).
- * Field `cS` added 2026.07.01 (platform-level margin collateral status).
- * @see https://www.kucoin.com/docs-new/3470231w0
- */
-export interface WsUTABalancePushData {
-  U: number | string;
-  a: string;
-  b: string;
-  c: string;
-  e?: string;
-  h: string;
-  l?: string;
-  /** Platform-level margin collateral status (UNIFIED balance pushes) */
-  cS?: string;
-}
-⋮----
-/** Platform-level margin collateral status (UNIFIED balance pushes) */
-⋮----
-export interface WsUTABalancePush {
-  P: number;
-  T: string;
-  d: WsUTABalancePushData;
-}
-⋮----
-/**
- * UTA WebSocket private position push (`channel: position` / `positionAll`).
- * Fields `pM` and `r` added 2026.06.03; `adl` added 2026.05.15.
- * @see https://www.kucoin.com/docs-new/3470233w0
- */
-export interface WsUTAPositionPushData {
-  O?: number;
-  U: number;
-  l?: string;
-  q: string;
-  s: string;
-  bP?: string;
-  eP?: string;
-  iM?: string;
-  lP?: string;
-  mM: string;
-  /** Mark price */
-  mP?: string;
-  pV?: string;
-  pi?: string;
-  mmr?: string;
-  mtM?: string;
-  rPL?: string;
-  uPL?: string;
-  /** Margin occupied by the futures position (as of 2026.06.03) */
-  pM?: string;
-  /** Isolated futures risk ratio, e.g. 0.65 = 65% (as of 2026.06.03) */
-  r?: string;
-  /** ADL ranking percentile, e.g. 0.46 = 46% (as of 2026.05.15) */
-  adl?: string;
-}
-⋮----
-/** Mark price */
-⋮----
-/** Margin occupied by the futures position (as of 2026.06.03) */
-⋮----
-/** Isolated futures risk ratio, e.g. 0.65 = 65% (as of 2026.06.03) */
-⋮----
-/** ADL ranking percentile, e.g. 0.46 = 46% (as of 2026.05.15) */
-⋮----
-export interface WsUTAPositionPush {
-  P: number;
-  T: string;
-  d: WsUTAPositionPushData;
-}
-⋮----
-/**
- * UTA WebSocket public Funding Fee channel (`channel: fundingFee`, FUTURES).
- * Added 2026.07.01.
- */
-export interface WsUTAFundingFeePublicPush {
-  T: string;
-  P: number;
-  d: {
-    s: string;
-    fR?: string;
-    fT?: number;
-    /** Current funding rate (UTA V2 `funding-fee` channel) */
-    fr?: string;
-    /** Funding time (UTA V2) */
-    ft?: number;
-    /** Last settled funding fee rate (UTA V2 2026.08.27) */
-    lfr?: string;
-    nt?: number;
-    gl?: number;
-    fc?: string;
-    ff?: string;
-    M?: number;
-    [key: string]: string | number | boolean | undefined;
-  };
-}
-⋮----
-/** Current funding rate (UTA V2 `funding-fee` channel) */
-⋮----
-/** Funding time (UTA V2) */
-⋮----
-/** Last settled funding fee rate (UTA V2 2026.08.27) */
-⋮----
-/**
- * UTA WebSocket public All Funding Fee Rates channel (`channel: funding-fee-all-symbols`).
- * Added 2026.08.27.
- * @see https://www.kucoin.com/docs-new/3470412w0
- */
-export interface WsUTAAllFundingFeeRatesPublicPush {
-  T: string;
-  P: number;
-  d: WsUTAFundingFeePublicPush['d'][];
-}
-⋮----
-/**
- * UTA WebSocket private execution push (`channel: execution`).
- * Field `fP` added 2026.09.21. Empty before 2026.09.05 (UTC-8).
- * When fT is ADL/LIQUID/SETTLEMENT, q is a positive value (2026.08.20).
- * @see https://www.kucoin.com/docs-new/3470407w0
- */
-export interface WsUTAExecutionPushData {
-  oi?: string;
-  s?: string;
-  S?: string;
-  oT?: string;
-  p?: string;
-  q?: string;
-  ti?: string;
-  E?: number;
-  lR?: string;
-  f?: string;
-  fC?: string;
-  fT?: string;
-  ci?: string;
-  /** Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) */
-  fP?: string;
-  [key: string]: string | number | boolean | undefined;
-}
-⋮----
-/** Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) */
-⋮----
-export interface WsUTAExecutionPush {
-  T: string;
-  P: number;
-  d: WsUTAExecutionPushData;
-}
-⋮----
-/**
- * UTA WebSocket private order push (`channel: order` / `orderAll`).
- * Field `brokerTag` added 2026.09.21.
- * @see https://www.kucoin.com/docs-new/3470228w0
- */
-export interface WsUTAOrderPushData {
-  brokerTag?: string;
-  [key: string]: string | number | boolean | undefined;
-}
-⋮----
-export interface WsUTAOrderPush {
-  T: string;
-  P: number;
-  d: WsUTAOrderPushData;
-}
-⋮----
-/**
- * UTA WebSocket public Mark Price channel (`channel: markPrice`, FUTURES).
- * Added 2026.07.01.
- */
-export interface WsUTAMarkPricePublicPush {
-  T: string;
-  P: number;
-  d: {
-    s: string;
-    mP?: string;
-    M?: number;
-    [key: string]: string | number | boolean | undefined;
-  };
-}
-⋮----
-/**
- * UTA WebSocket public Call Auction Info channel (`channel: callAuctionInfo`).
- * Added 2026.07.17.
- * @see https://www.kucoin.com/docs-new/3470268w0
- */
-export interface WsUTACallAuctionInfoPublicPush {
-  T: string;
-  t?: string;
-  P: number;
-  d: {
-    s: string;
-    /** Estimated price */
-    eq?: number | string;
-    /** Estimated size */
-    es?: number | string;
-    /** Sell order range low price */
-    slp?: number | string;
-    /** Sell order range high price */
-    shp?: number | string;
-    /** Buy order range low price */
-    blp?: number | string;
-    /** Buy order range high price */
-    bhp?: number | string;
-    ts?: number;
-    [key: string]: string | number | boolean | undefined;
-  };
-}
-⋮----
-/** Estimated price */
-⋮----
-/** Estimated size */
-⋮----
-/** Sell order range low price */
-⋮----
-/** Sell order range high price */
-⋮----
-/** Buy order range low price */
-⋮----
-/** Buy order range high price */
-⋮----
-/**
- * Classic futures WebSocket `/contract/positionAll` funding fee settlement push.
- * `symbol` added to `data` field 2026.07.01.
- * @see https://www.kucoin.com/docs-new/3470088w0
- */
-export interface WsClassicFuturesFundingFeeSettlement {
-  topic: string;
-  subject: 'funding.begin' | 'funding.end';
-  data: {
-    symbol: string;
-    fundingTime: number;
-    fundingRate: number;
-    timestamp: number;
-  };
-}
-
-================
 File: src/BrokerClient.ts
 ================
 import { BaseRestClient } from './lib/BaseRestClient.js';
@@ -11428,6 +11244,283 @@ export function getRestBaseUrl(
 ): string
 ⋮----
 // Override to EU URL for EU regional users
+
+================
+File: src/types/websockets/ws-events.ts
+================
+export interface WsDataEvent<TData = any, TWSKey = string> {
+  data: TData;
+  table: string;
+  wsKey: TWSKey;
+}
+⋮----
+export interface MessageEventLike<TDataType = string> {
+  target: WebSocket;
+  type: 'message';
+  data: TDataType;
+}
+⋮----
+export function isMessageEvent(msg: unknown): msg is MessageEventLike
+⋮----
+/**
+ * UTA WebSocket private balance push (`channel: balance`).
+ * Field `cS` added 2026.07.01 (platform-level margin collateral status).
+ * @see https://www.kucoin.com/docs-new/3470231w0
+ */
+export interface WsUTABalancePushData {
+  U: number | string;
+  a: string;
+  b: string;
+  c: string;
+  e?: string;
+  h: string;
+  l?: string;
+  /** Platform-level margin collateral status (UNIFIED balance pushes) */
+  cS?: string;
+}
+⋮----
+/** Platform-level margin collateral status (UNIFIED balance pushes) */
+⋮----
+export interface WsUTABalancePush {
+  P: number;
+  T: string;
+  d: WsUTABalancePushData;
+}
+⋮----
+/**
+ * UTA WebSocket private position push (`channel: position` / `positionAll`).
+ * Fields `pM` and `r` added 2026.06.03; `adl` added 2026.05.15.
+ * @see https://www.kucoin.com/docs-new/3470233w0
+ */
+export interface WsUTAPositionPushData {
+  O?: number;
+  U: number;
+  l?: string;
+  q: string;
+  s: string;
+  bP?: string;
+  eP?: string;
+  iM?: string;
+  lP?: string;
+  mM: string;
+  /** Mark price */
+  mP?: string;
+  pV?: string;
+  pi?: string;
+  mmr?: string;
+  mtM?: string;
+  rPL?: string;
+  uPL?: string;
+  /** Margin occupied by the futures position (as of 2026.06.03) */
+  pM?: string;
+  /** Isolated futures risk ratio, e.g. 0.65 = 65% (as of 2026.06.03) */
+  r?: string;
+  /** ADL ranking percentile, e.g. 0.46 = 46% (as of 2026.05.15) */
+  adl?: string;
+}
+⋮----
+/** Mark price */
+⋮----
+/** Margin occupied by the futures position (as of 2026.06.03) */
+⋮----
+/** Isolated futures risk ratio, e.g. 0.65 = 65% (as of 2026.06.03) */
+⋮----
+/** ADL ranking percentile, e.g. 0.46 = 46% (as of 2026.05.15) */
+⋮----
+export interface WsUTAPositionPush {
+  P: number;
+  T: string;
+  d: WsUTAPositionPushData;
+}
+⋮----
+/**
+ * UTA WebSocket private funding fee settlement channels. Added 2026.11.06.
+ * @see https://www.kucoin.com/docs-new/3470415w0
+ */
+export type WsUTAFundingFeeSettleTopic =
+  | 'fundingFeeSettle'
+  | 'fundingFeeSettleAll';
+⋮----
+export interface WsUTAFundingFeeSettlePushData {
+  s: string;
+  mp: string;
+  q: string;
+  mM: string;
+  sc: string;
+  ft: number;
+  ff: string;
+  fr: string;
+  pV: string;
+}
+⋮----
+export interface WsUTAFundingFeeSettlePush {
+  P: number;
+  T: WsUTAFundingFeeSettleTopic;
+  d: WsUTAFundingFeeSettlePushData;
+}
+⋮----
+/**
+ * UTA WebSocket public Funding Fee channel (`channel: fundingFee`, FUTURES).
+ * Added 2026.07.01.
+ */
+export interface WsUTAFundingFeePublicPush {
+  T: string;
+  P: number;
+  d: {
+    s: string;
+    fR?: string;
+    fT?: number;
+    /** Current funding rate (UTA V2 `funding-fee` channel) */
+    fr?: string;
+    /** Funding time (UTA V2) */
+    ft?: number;
+    /** Last settled funding fee rate (UTA V2 2026.08.27) */
+    lfr?: string;
+    nt?: number;
+    gl?: number;
+    fc?: string;
+    ff?: string;
+    M?: number;
+    [key: string]: string | number | boolean | undefined;
+  };
+}
+⋮----
+/** Current funding rate (UTA V2 `funding-fee` channel) */
+⋮----
+/** Funding time (UTA V2) */
+⋮----
+/** Last settled funding fee rate (UTA V2 2026.08.27) */
+⋮----
+/**
+ * UTA WebSocket public All Funding Fee Rates channel (`channel: funding-fee-all-symbols`).
+ * Added 2026.08.27.
+ * @see https://www.kucoin.com/docs-new/3470412w0
+ */
+export interface WsUTAAllFundingFeeRatesPublicPush {
+  T: string;
+  P: number;
+  d: WsUTAFundingFeePublicPush['d'][];
+}
+⋮----
+/**
+ * UTA WebSocket private execution push (`channel: execution`).
+ * Field `fP` added 2026.09.21. Empty before 2026.09.05 (UTC-8).
+ * When fT is ADL/LIQUID/SETTLEMENT, q is a positive value (2026.08.20).
+ * @see https://www.kucoin.com/docs-new/3470407w0
+ */
+export interface WsUTAExecutionPushData {
+  oi?: string;
+  s?: string;
+  S?: string;
+  oT?: string;
+  p?: string;
+  q?: string;
+  ti?: string;
+  E?: number;
+  lR?: string;
+  f?: string;
+  fC?: string;
+  fT?: string;
+  ci?: string;
+  /** Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) */
+  fP?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+⋮----
+/** Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) */
+⋮----
+export interface WsUTAExecutionPush {
+  T: string;
+  P: number;
+  d: WsUTAExecutionPushData;
+}
+⋮----
+/**
+ * UTA WebSocket private order push (`channel: order` / `orderAll`).
+ * Field `brokerTag` added 2026.09.21.
+ * @see https://www.kucoin.com/docs-new/3470228w0
+ */
+export interface WsUTAOrderPushData {
+  brokerTag?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+⋮----
+export interface WsUTAOrderPush {
+  T: string;
+  P: number;
+  d: WsUTAOrderPushData;
+}
+⋮----
+/**
+ * UTA WebSocket public Mark Price channel (`channel: markPrice`, FUTURES).
+ * Added 2026.07.01.
+ */
+export interface WsUTAMarkPricePublicPush {
+  T: string;
+  P: number;
+  d: {
+    s: string;
+    mP?: string;
+    M?: number;
+    [key: string]: string | number | boolean | undefined;
+  };
+}
+⋮----
+/**
+ * UTA WebSocket public Call Auction Info channel (`channel: callAuctionInfo`).
+ * Added 2026.07.17.
+ * @see https://www.kucoin.com/docs-new/3470268w0
+ */
+export interface WsUTACallAuctionInfoPublicPush {
+  T: string;
+  t?: string;
+  P: number;
+  d: {
+    s: string;
+    /** Estimated price */
+    eq?: number | string;
+    /** Estimated size */
+    es?: number | string;
+    /** Sell order range low price */
+    slp?: number | string;
+    /** Sell order range high price */
+    shp?: number | string;
+    /** Buy order range low price */
+    blp?: number | string;
+    /** Buy order range high price */
+    bhp?: number | string;
+    ts?: number;
+    [key: string]: string | number | boolean | undefined;
+  };
+}
+⋮----
+/** Estimated price */
+⋮----
+/** Estimated size */
+⋮----
+/** Sell order range low price */
+⋮----
+/** Sell order range high price */
+⋮----
+/** Buy order range low price */
+⋮----
+/** Buy order range high price */
+⋮----
+/**
+ * Classic futures WebSocket `/contract/positionAll` funding fee settlement push.
+ * `symbol` added to `data` field 2026.07.01.
+ * @see https://www.kucoin.com/docs-new/3470088w0
+ */
+export interface WsClassicFuturesFundingFeeSettlement {
+  topic: string;
+  subject: 'funding.begin' | 'funding.end';
+  data: {
+    symbol: string;
+    fundingTime: number;
+    fundingRate: number;
+    timestamp: number;
+  };
+}
 
 ================
 File: docs/KUCOIN_SDK_QUICKSTART_GUIDE.md
@@ -13494,6 +13587,1350 @@ export type WsMarket = 'spot' | 'futures';
 export type WsEventInternalSrc = 'event' | 'function';
 
 ================
+File: examples/WebSockets/ws-public-futures-pro-v2.ts
+================
+import {
+  WebsocketClient,
+  WS_KEY_MAP,
+  WsTopicRequest,
+} from '../../src/index.js';
+// import { DefaultLogger, WebsocketClient, WsTopicRequest } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+⋮----
+// Optional: fully customise the logging experience by injecting a custom logger
+// const logger: typeof DefaultLogger = {
+//   ...DefaultLogger,
+//   trace: (...params) => {
+//     if (
+//       [
+//         'Sending ping',
+//         'Sending upstream ws message: ',
+//         'Received pong',
+//         'Decompressed message event from buffer',
+//       ].includes(params[0])
+//     ) {
+//       return;
+//     }
+//     console.log('trace', params);
+//   },
+// };
+⋮----
+// const client = new WebsocketClient({}, logger);
+⋮----
+// Data received
+⋮----
+// Something happened, attempting to reconenct
+⋮----
+// Reconnect successful
+⋮----
+// Connection closed. If unexpected, expect reconnect -> reconnected.
+⋮----
+// Reply to a request, e.g. "subscribe"/"unsubscribe"/"authenticate"
+⋮----
+// throw new Error('res?');
+⋮----
+/**
+   * The following example demonstrates the ways to consume data from the V2 (Pro) WebSockets. For the V1 examples, ws-public-futures-v1.ts
+   */
+⋮----
+// Optional: await a connection to be ready before subscribing (this is not necessary)
+// await client.connect(WS_KEY_MAP.futuresPublicProV2);
+⋮----
+/**
+     * Structure your requests into the following format. The below example will be sent as per the example in the docs. The parameters are automatically merged into the request. Just follow the example below:
+     * {
+     *    "id": "1545910660739", // automatically generated by SDK
+     *    "action": "SUBSCRIBE", // automatically added by SDK
+     *    "channel":"kline",
+     *    "tradeType": "FUTURES",       // SPOT / FUTURES
+     *    "symbol": "XBTUSDTM",
+     *    "interval": "1min"
+     * }
+     *
+     * https://www.kucoin.com/docs-new/3470223w0
+     */
+⋮----
+/**
+       * Anything in the payload will be merged into the subscribe "request", allowing you to send misc parameters supported by the exchange.
+       * For more info on parameters, see: https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
+       */
+⋮----
+// this needs to match the WsKey below.
+// tradeType: SPOT ==> spotPublicProV2
+// tradeType: FUTURES ==> futuresPublicProV2
+⋮----
+/**
+     * Or, send an array of structured objects with parameters, if you wanted to send multiple in one request
+     *
+     */
+⋮----
+// BTCUSDT tickers for FUTURES market
+// https://www.kucoin.com/docs-new/3470222w0
+⋮----
+// BTCUSDT orderbook updates for FUTURES market
+// https://www.kucoin.com/docs-new/3470221w0
+⋮----
+depth: '5', // 1 / 5 / 50 / increment / increment@10ms (2026.06.17: snapshot + 500-level, 10ms batch)
+rpiFilter: 0, // 0：Only NoneRPI orders [Default]  1(Only Support Futures)：NoneRPI+ RPI Orders. When rpiFilter=1, "depth" only supports 5/50.
+⋮----
+// BTCUSDT trades for spot market
+// https://www.kucoin.com/docs-new/3470224w0
+⋮----
+// UTA public Funding Fee channel
+// https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
+⋮----
+// UTA V2 public Funding Fee Rate (`symbols` for multiple contracts, 2026.08.27)
+// https://www.kucoin.com/docs-new/3470357w0
+⋮----
+// UTA V2 public All Funding Fee Rates
+// https://www.kucoin.com/docs-new/3470412w0
+⋮----
+// UTA public Mark Price channel
+
+================
+File: src/types/response/uta-types.ts
+================
+/**
+ * Unified Trading Account Response Types
+ */
+⋮----
+export interface AnnouncementItemUTA {
+  id: number;
+  title: string;
+  type: string[];
+  description: string;
+  releaseTime: number;
+  language: string;
+  url: string;
+}
+⋮----
+export interface GetAnnouncementsResponseUTA {
+  totalNumber: number;
+  totalPage: number;
+  pageNumber: number;
+  pageSize: number;
+  list: AnnouncementItemUTA[];
+}
+⋮----
+export interface CurrencyChainUTA {
+  chainName: string;
+  minWithdrawSize: string | null;
+  minDepositSize: string | null;
+  withdrawFeeRate: string;
+  minWithdrawFee: string;
+  isWithdrawEnabled: boolean;
+  isDepositEnabled: boolean;
+  confirms?: number;
+  preConfirms: number;
+  contractAddress?: string;
+  withdrawPrecision: number;
+  maxWithdrawSize: string | null;
+  maxDepositSize: string | null;
+  needTag: boolean;
+  /** @deprecated UTA V2 renamed to chain (2026.08.27) */
+  chainId?: string;
+  /** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
+  chain?: string;
+  addressRegex?: string;
+  memoRegex?: string;
+  depositFeeRate?: string;
+  depositTierFee?: string;
+  fixedDepositFee?: string;
+  maxDepositFee?: string;
+  maxWithdrawFee?: string;
+  isMemoRequired?: boolean;
+}
+⋮----
+/** @deprecated UTA V2 renamed to chain (2026.08.27) */
+⋮----
+/** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
+⋮----
+export interface GetCurrencyResponseUTA {
+  currency: string;
+  name: string;
+  fullName: string;
+  precision: number;
+  confirms?: number | null;
+  contractAddress?: string | null;
+  /** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
+  isMarginEnabled?: boolean;
+  /** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
+  isDebitEnabled?: boolean;
+  /** UTA V2 chain list (2026.08.27). Replaces items. */
+  list: CurrencyChainUTA[];
+  /** @deprecated UTA V2 renamed to list */
+  items?: CurrencyChainUTA[];
+}
+⋮----
+/** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
+⋮----
+/** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
+⋮----
+/** UTA V2 chain list (2026.08.27). Replaces items. */
+⋮----
+/** @deprecated UTA V2 renamed to list */
+⋮----
+export type GetCurrenciesResponseUTA = GetCurrencyResponseUTA[];
+⋮----
+export interface SymbolUTA {
+  symbol: string;
+  name?: string;
+  baseCurrency: string;
+  quoteCurrency: string;
+  market?: string;
+  minBaseOrderSize?: string;
+  minQuoteOrderSize?: string;
+  maxBaseOrderSize?: string | number;
+  maxQuoteOrderSize?: string;
+  baseOrderStep?: string;
+  quoteOrderStep?: string;
+  tickSize?: string | number;
+  feeCurrency?: string;
+  tradingStatus?:
+    | string
+    | 'TradingEnabled'
+    | 'TradingDisabled'
+    | 'Init'
+    | 'Open'
+    | 'PrepareSettled'
+    | 'BeingSettled'
+    | 'Settled'
+    | 'Paused'
+    | 'Closed'
+    | 'CancelOnly';
+  marginMode?: string;
+  priceLimitRatio?: string;
+  /** UTA V2: classA / classB / classC. Numeric 1/2/3 remains on older payloads. */
+  feeCategory?: number | 'classA' | 'classB' | 'classC' | string;
+  makerFeeCoefficient?: string;
+  takerFeeCoefficient?: string;
+  st?: boolean;
+  settlementCurrency?: string;
+  contractType?: string;
+  isInverse?: boolean;
+  launchTime?: number;
+  expiryTime?: number | string | null;
+  settlementTime?: number | string | null;
+  maxPrice?: string | number;
+  lotSize?: string | number;
+  /**
+   * Unit size. As of 2026.01.12:
+   * - For inverse contracts: changed from -1 to 1 (1 contract = 1 USD)
+   * - For Futures: unitSize indicates contract size
+   */
+  unitSize?: string | number;
+  makerFeeRate?: string | number;
+  takerFeeRate?: string | number;
+  settlementFeeRate?: string | number | null;
+  maxLeverage?: number | string;
+  indexSourceExchanges?: string[];
+  k?: string | number;
+  m?: string | number;
+  f?: string | number;
+  mmrLimit?: string | number;
+  mmrLevConstant?: string | number;
+  alertRiskRatio?: string;
+  liquidationRiskRatio?: string;
+  baseBorrowEnable?: boolean | string;
+  quoteBorrowEnable?: boolean | string;
+  baseTransferInEnable?: boolean | string;
+  quoteTransferInEnable?: boolean | string;
+  /** Display symbol for Futures (added 2025.12.26 & 2026.01.12) */
+  displaySymbol?: string;
+  /** Display base currency for Futures (added 2025.12.26 & 2026.01.12) */
+  displayBaseCurrency?: string;
+  maxMarketOrderSize?: string;
+  preMarketToPerpDate?: number | string | null;
+  minFunds?: string;
+  callauctionIsEnabled?: boolean;
+  callauctionPriceFloor?: string | null;
+  callauctionPriceCeiling?: string | null;
+  callauctionFirstStageStartTime?: number | string | null;
+  callauctionSecondStageStartTime?: number | string | null;
+  callauctionThirdStageStartTime?: number | string | null;
+  tradingStartTime?: number | string | null;
+}
+⋮----
+/** UTA V2: classA / classB / classC. Numeric 1/2/3 remains on older payloads. */
+⋮----
+/**
+   * Unit size. As of 2026.01.12:
+   * - For inverse contracts: changed from -1 to 1 (1 contract = 1 USD)
+   * - For Futures: unitSize indicates contract size
+   */
+⋮----
+/** Display symbol for Futures (added 2025.12.26 & 2026.01.12) */
+⋮----
+/** Display base currency for Futures (added 2025.12.26 & 2026.01.12) */
+⋮----
+export interface GetSymbolResponseUTA {
+  tradeType: string;
+  list: SymbolUTA[];
+}
+⋮----
+export interface TickerUTA {
+  symbol: string;
+  name?: string;
+  bestBidPrice: string;
+  bestBidSize: string;
+  bestAskPrice: string;
+  bestAskSize: string;
+  high: string;
+  low: string;
+  baseVolume: string;
+  quoteVolume: string;
+  lastPrice: string;
+  open: string;
+  size: string;
+  /** Absolute price change over 24h (as of 2026.07.01) */
+  priceChange?: string;
+  /** Relative price change over 24h, e.g. 0.0036 = 0.36% (as of 2026.07.01) */
+  priceChangePercent?: string;
+  /** Index price (Futures tickers; as of 2026.07.01) */
+  indexPrice?: string;
+  /** Mark price (Futures tickers; as of 2026.07.01) */
+  markPrice?: string;
+}
+⋮----
+/** Absolute price change over 24h (as of 2026.07.01) */
+⋮----
+/** Relative price change over 24h, e.g. 0.0036 = 0.36% (as of 2026.07.01) */
+⋮----
+/** Index price (Futures tickers; as of 2026.07.01) */
+⋮----
+/** Mark price (Futures tickers; as of 2026.07.01) */
+⋮----
+/** Fiat prices keyed by currency symbol (UTA Get Fiat Price) */
+export type GetFiatPriceResponseUTA = Record<string, string>;
+⋮----
+export interface GetTickerResponseUTA {
+  tradeType: string;
+  /** Timestamp in nanoseconds (as of 2026.01.12) */
+  ts: number;
+  list: TickerUTA[];
+}
+⋮----
+/** Timestamp in nanoseconds (as of 2026.01.12) */
+⋮----
+export interface TradeUTA {
+  sequence: string | number;
+  tradeId: string;
+  price: string;
+  size: string;
+  side: 'buy' | 'sell';
+  /** Timestamp in nanoseconds */
+  ts: number;
+  /** Whether it is an RPI trade (Futures only) */
+  isRpiTrade?: boolean;
+}
+⋮----
+/** Timestamp in nanoseconds */
+⋮----
+/** Whether it is an RPI trade (Futures only) */
+⋮----
+export interface GetTradesResponseUTA {
+  tradeType: string;
+  list: TradeUTA[];
+}
+⋮----
+export interface GetOrderBookResponseUTA {
+  tradeType: string;
+  symbol: string;
+  /** Sequence number. Changed from string to number for Spot as of 2026.01.17 */
+  sequence: number;
+  /**
+   * Bids array, ordered from high to low.
+   * When rpiFilter=0 (or not set): each entry is [price, size]
+   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
+   * As of 2026.01.17: All values are strings
+   */
+  bids: string[][];
+  /**
+   * Asks array, ordered from low to high.
+   * When rpiFilter=0 (or not set): each entry is [price, size]
+   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
+   * As of 2026.01.17: All values are strings
+   */
+  asks: string[][];
+  /** Timestamp in nanoseconds (Futures only) */
+  ts?: number;
+}
+⋮----
+/** Sequence number. Changed from string to number for Spot as of 2026.01.17 */
+⋮----
+/**
+   * Bids array, ordered from high to low.
+   * When rpiFilter=0 (or not set): each entry is [price, size]
+   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
+   * As of 2026.01.17: All values are strings
+   */
+⋮----
+/**
+   * Asks array, ordered from low to high.
+   * When rpiFilter=0 (or not set): each entry is [price, size]
+   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
+   * As of 2026.01.17: All values are strings
+   */
+⋮----
+/** Timestamp in nanoseconds (Futures only) */
+⋮----
+export interface GetKlinesResponseUTA {
+  tradeType: string;
+  symbol: string;
+  list: string[][]; // [time, open, close, high, low, volume, turnover]
+}
+⋮----
+list: string[][]; // [time, open, close, high, low, volume, turnover]
+⋮----
+export interface GetCurrentFundingRateResponseUTA {
+  symbol: string;
+  nextFundingRate: number | string;
+  fundingTime: number;
+  fundingRateCap: number | string;
+  fundingRateFloor: number | string;
+  /** Current funding settlement interval (ms); as of 2026.04.19 */
+  currentGranularity: number;
+  /** New interval after change (ms); as of 2026.04.19 */
+  newGranularity: number;
+  /** When newGranularity takes effect (ms); as of 2026.04.19 */
+  newGranularityStartTime: number;
+}
+⋮----
+/** Current funding settlement interval (ms); as of 2026.04.19 */
+⋮----
+/** New interval after change (ms); as of 2026.04.19 */
+⋮----
+/** When newGranularity takes effect (ms); as of 2026.04.19 */
+⋮----
+export interface GetIndexPriceDecompositionUTA {
+  exchange: string;
+  price: string;
+  weight: string;
+}
+⋮----
+export interface GetIndexPriceItemUTA {
+  symbol: string;
+  granularity: number;
+  ts: number;
+  indexPrice: string;
+  decompositionList?: GetIndexPriceDecompositionUTA[];
+}
+⋮----
+export interface GetIndexPriceResponseUTA {
+  items: GetIndexPriceItemUTA[];
+}
+⋮----
+export interface FundingRateHistoryItemUTA {
+  fundingRate: number;
+  ts: number;
+}
+⋮----
+export interface GetHistoryFundingRateResponseUTA {
+  symbol: string;
+  list: FundingRateHistoryItemUTA[];
+}
+⋮----
+export interface ModifyMarginCrossLeverageResponseUTA {
+  currency?: string;
+  leverage?: string;
+}
+⋮----
+/** One row from Get Leverage (UTA) — margin uses currency, futures uses symbol */
+export interface GetLeverageItemUTA {
+  leverage: string;
+  marginMode: string;
+  currency?: string;
+  symbol?: string;
+}
+⋮----
+export interface PrivateFundingFeeHistoryItemUTA {
+  symbol: string;
+  marginMode: 'CROSS' | 'ISOLATED';
+  fundingRate: string;
+  markPrice: string;
+  size: string;
+  positionValue: string;
+  fundingFee: string;
+  settleCurrency: string;
+  settlementTime: number;
+}
+⋮----
+export interface GetPrivateFundingFeeHistoryResponseUTA {
+  lastId: number;
+  items: PrivateFundingFeeHistoryItemUTA[];
+}
+⋮----
+export interface GetBorrowingRatesAndLimitsResponseUTA {
+  currentRateHourly: string;
+  currentRateDaily: string;
+  borrowLimitTotal: string;
+  borrowLimitTotalHold: string;
+  borrowLimitHold: string;
+  interestFreeBorrowLimit: string;
+}
+⋮----
+export interface BorrowableCurrencyUTA {
+  currency: string;
+}
+⋮----
+export interface GetCrossMarginConfigResponseUTA {
+  maxLeverage: number;
+  alertRiskRatio: string;
+  liquidationRiskRatio: string;
+  currencyList: string[];
+}
+⋮----
+export interface GetServiceStatusResponseUTA {
+  tradeType: string;
+  serverStatus: 'open' | 'close' | 'cancelonly';
+  msg: string;
+}
+⋮----
+/**
+ * Account Response Types
+ */
+⋮----
+export interface AccountCurrencyUTA {
+  currency: string;
+  /** @deprecated UTA V2 renamed to locked (2026.08.27) */
+  hold?: string;
+  /** UTA V2 locked amount (2026.08.27). Replaces hold. */
+  locked?: string;
+  available: string;
+  balance: string;
+  equity: string;
+  /** Platform-level margin collateral status (as of 2026.07.01) */
+  collateralStatus?: string;
+  /** Potential borrow reserved by open orders (UTA; as of 2026.04.19) */
+  potentialBorrow?: string;
+  liability?: string;
+  totalCrossMargin?: string;
+  crossPosMargin?: string;
+  crossOrderMargin?: string;
+  crossUnPnl?: string;
+  isolatedPosMargin?: string;
+  isolatedOrderMargin?: string;
+  isolatedFundingFeeMargin?: string;
+  isolatedUnPnl?: string;
+  /** @deprecated UTA V2 renamed to liabilityPrincipal (2026.08.27) */
+  liabilityPrinciple?: string;
+  liabilityPrincipal?: string;
+  liabilityInterest?: string;
+  unrealisedPnl?: string;
+}
+⋮----
+/** @deprecated UTA V2 renamed to locked (2026.08.27) */
+⋮----
+/** UTA V2 locked amount (2026.08.27). Replaces hold. */
+⋮----
+/** Platform-level margin collateral status (as of 2026.07.01) */
+⋮----
+/** Potential borrow reserved by open orders (UTA; as of 2026.04.19) */
+⋮----
+/** @deprecated UTA V2 renamed to liabilityPrincipal (2026.08.27) */
+⋮----
+export interface AccountDataUTA {
+  accountSubtype?: string; // For ISOLATED (trading pair) or FUTURES (settlement currency)
+  riskRatio?: string;
+  currencies: AccountCurrencyUTA[];
+}
+⋮----
+accountSubtype?: string; // For ISOLATED (trading pair) or FUTURES (settlement currency)
+⋮----
+export interface GetClassicAccountResponseUTA {
+  accountType: string;
+  ts: number;
+  accounts: AccountDataUTA[];
+}
+⋮----
+export interface GetAccountOverviewResponseUTA {
+  accountType: string;
+  riskRatio: string;
+  equity: string;
+  liability: string;
+  availableMargin: string;
+  adjustedEquity: string;
+  im: string;
+  mm: string;
+}
+⋮----
+export interface SubAccountUserUTA {
+  uid: number;
+  /** @deprecated UTA V2 renamed to accounts (2026.08.27) */
+  accountList?: {
+    accountType:
+      | 'FUNDING'
+      | 'SPOT'
+      | 'FUTURES'
+      | 'CROSS'
+      | 'ISOLATED'
+      | 'OPTIONS'
+      | 'UNIFIED';
+    accountSubType: string | null;
+    currencyList: AccountCurrencyUTA[];
+  }[];
+  /** UTA V2 accounts list (2026.08.27). Replaces accountList. OPTIONS removed. */
+  accounts?: {
+    accountType:
+      | 'FUNDING'
+      | 'SPOT'
+      | 'FUTURES'
+      | 'CROSS'
+      | 'ISOLATED'
+      | 'UNIFIED';
+    /** UTA V2 renamed from accountSubType */
+    subAccountType?: string | null;
+    /** @deprecated UTA V2 renamed to subAccountType */
+    accountSubType?: string | null;
+    /** UTA V2 renamed from currencyList */
+    currencies?: AccountCurrencyUTA[];
+    /** @deprecated UTA V2 renamed to currencies */
+    currencyList?: AccountCurrencyUTA[];
+    /** UTA V2 renamed from liabilityPrinciple */
+    liabilityPrincipal?: string;
+    /** @deprecated UTA V2 renamed to liabilityPrincipal */
+    liabilityPrinciple?: string;
+  }[];
+}
+⋮----
+/** @deprecated UTA V2 renamed to accounts (2026.08.27) */
+⋮----
+/** UTA V2 accounts list (2026.08.27). Replaces accountList. OPTIONS removed. */
+⋮----
+/** UTA V2 renamed from accountSubType */
+⋮----
+/** @deprecated UTA V2 renamed to subAccountType */
+⋮----
+/** UTA V2 renamed from currencyList */
+⋮----
+/** @deprecated UTA V2 renamed to currencies */
+⋮----
+/** UTA V2 renamed from liabilityPrinciple */
+⋮----
+/** @deprecated UTA V2 renamed to liabilityPrincipal */
+⋮----
+export interface GetSubAccountResponseUTA {
+  ts: number;
+  userList: SubAccountUserUTA[];
+}
+⋮----
+export interface GetTransferQuotasResponseUTA {
+  currency: string;
+  transferable: string;
+  accountType: 'FUNDING' | 'SPOT' | 'FUTURES' | 'ISOLATED' | 'UNIFIED';
+}
+⋮----
+export interface FlexTransferResponseUTA {
+  orderId: string;
+  clientOid: string;
+}
+⋮----
+export interface SubAccountTransferPermissionUTA {
+  subUid: string;
+  subToSub: boolean;
+}
+⋮----
+export interface GetAccountModeResponseUTA {
+  selfAccountMode: 'CLASSIC' | 'UNIFIED';
+  unifiedSubAccount: number[];
+  classicSubAccount: number[];
+}
+⋮----
+export interface FeeRateItemUTA {
+  symbol: string;
+  takerFeeRate: string;
+  makerFeeRate: string;
+}
+⋮----
+export interface GetFeeRateResponseUTA {
+  tradeType: string;
+  list: FeeRateItemUTA[];
+}
+⋮----
+export interface AccountLedgerItemUTA {
+  accountType:
+    | 'FUNDING'
+    | 'SPOT'
+    | 'FUTURES'
+    | 'CROSS'
+    | 'ISOLATED'
+    | 'UNIFIED';
+  id: string;
+  currency: string;
+  direction: 'IN' | 'OUT';
+  businessType: string;
+  /** Change in funds balance. Always positive as of 2026.04.28; use direction (IN/OUT) for flow. */
+  amount: string;
+  balance: string;
+  fee: string;
+  tax: string;
+  remark: string;
+  /** Timestamp in nanoseconds (standardized as of 2026.01.12) */
+  ts: number;
+}
+⋮----
+/** Change in funds balance. Always positive as of 2026.04.28; use direction (IN/OUT) for flow. */
+⋮----
+/** Timestamp in nanoseconds (standardized as of 2026.01.12) */
+⋮----
+export interface GetAccountLedgerResponseUTA {
+  lastId?: number;
+  items?: AccountLedgerItemUTA[];
+}
+⋮----
+export type GetAccountLedgerResponseClassicUTA = AccountLedgerItemUTA[];
+⋮----
+export interface InterestHistoryItemUTA {
+  liability: string;
+  interest: string;
+  hourlyInterestRate: string;
+  currency: string;
+  ts: number;
+  interestFreeLiability: string;
+}
+⋮----
+export interface GetInterestHistoryResponseUTA {
+  items: InterestHistoryItemUTA[];
+  lastId: number;
+}
+⋮----
+export interface DepositAddressUTA {
+  address: string;
+  memo?: string;
+  /** @deprecated UTA V2 renamed to chain (2026.08.27) */
+  chainId?: string;
+  /** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
+  chain?: string;
+  /** @deprecated UTA V2 renamed to toAccountType (2026.08.27) */
+  to?: 'FUNDING' | 'SPOT' | 'UNIFIED';
+  /** UTA V2 destination account type (2026.08.27). Replaces to. */
+  toAccountType?: 'FUNDING' | 'SPOT' | 'UNIFIED';
+  currency: string;
+  contractAddress: string;
+  chainName: string;
+  expirationDate: string;
+  remark?: string;
+}
+⋮----
+/** @deprecated UTA V2 renamed to chain (2026.08.27) */
+⋮----
+/** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
+⋮----
+/** @deprecated UTA V2 renamed to toAccountType (2026.08.27) */
+⋮----
+/** UTA V2 destination account type (2026.08.27). Replaces to. */
+⋮----
+export interface WithdrawalQuotasUTA {
+  currency: string;
+  limitBTCAmount: string;
+  usedBTCAmount: string;
+  quotaCurrency: string;
+  limitQuotaCurrencyAmount: string;
+  usedQuotaCurrencyAmount: string;
+  remainAmount?: string;
+  availableAmount?: string;
+  withdrawMinFee?: string;
+  innerWithdrawMinFee?: string;
+  /** UTA V2 remaining quota (2026.08.27). Replaces remainAmount. */
+  remainingQuotaAmount?: string;
+  /** UTA V2 available withdraw amount (2026.08.27). Replaces availableAmount. */
+  availableWithdrawAmount?: string;
+  /** UTA V2 min withdraw fee (2026.08.27). Replaces withdrawMinFee. */
+  minWithdrawFee?: string;
+  /** UTA V2 min inner withdraw fee (2026.08.27). Replaces innerWithdrawMinFee. */
+  minInnerWithdrawFee?: string;
+  withdrawMinSize: string;
+  isWithdrawEnabled: boolean;
+  precision: number;
+  reason: string | null;
+  lockedAmount: string;
+  /** @deprecated UTA V2 renamed to chain (2026.08.27) */
+  chainId?: string;
+  /** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
+  chain?: string;
+  chainName: string;
+}
+⋮----
+/** UTA V2 remaining quota (2026.08.27). Replaces remainAmount. */
+⋮----
+/** UTA V2 available withdraw amount (2026.08.27). Replaces availableAmount. */
+⋮----
+/** UTA V2 min withdraw fee (2026.08.27). Replaces withdrawMinFee. */
+⋮----
+/** UTA V2 min inner withdraw fee (2026.08.27). Replaces innerWithdrawMinFee. */
+⋮----
+/** @deprecated UTA V2 renamed to chain (2026.08.27) */
+⋮----
+/** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
+⋮----
+export interface SubmitWithdrawResponseUTA {
+  withdrawalId: string;
+}
+⋮----
+export interface AddSubAccountResponseUTA {
+  uid: number;
+  subName: string;
+  remarks: string;
+  access: string;
+}
+⋮----
+export interface AddSubAccountApiResponseUTA {
+  subName: string;
+  remark: string;
+  apiKey: string;
+  apiSecret: string;
+  apiVersion: number;
+  passphrase: string;
+  permission: string;
+  ipWhitelist?: string;
+  createdAt: number;
+}
+⋮----
+export interface KYCRegionUTA {
+  code: string;
+  enName: string;
+}
+⋮----
+export interface ApiKeyInfoUTA {
+  uid: number;
+  parentUid?: number;
+  region: string;
+  kycStatus: 0 | 1;
+  subName?: string;
+  remark: string;
+  apiKey: string;
+  apiVersion: number;
+  permission: string;
+  ipWhitelist?: string;
+  isMaster: boolean;
+  createdAt: number;
+  expiredAt?: number | null;
+  thirdPartyApp?: string;
+  siteType?: 'global' | 'turkey' | 'australia' | 'europe' | 'thailand';
+}
+⋮----
+/**
+ * Order Response Types
+ */
+⋮----
+export interface PlaceOrderResponseUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  orderId: string;
+  clientOid: string;
+  /** Timestamp when system completes order request in nanoseconds. Classic mode not supported */
+  ts?: number;
+  /** Borrow amount. Unified mode not supported */
+  borrowSize?: string;
+  /** Loan order ID. Unified mode not supported */
+  loanApplyId?: string;
+}
+⋮----
+/** Timestamp when system completes order request in nanoseconds. Classic mode not supported */
+⋮----
+/** Borrow amount. Unified mode not supported */
+⋮----
+/** Loan order ID. Unified mode not supported */
+⋮----
+export interface BatchPlaceOrderItemResponseUTA {
+  orderId?: string;
+  clientOid?: string;
+  symbol?: string;
+  code?: string;
+  msg?: string;
+}
+⋮----
+export interface BatchPlaceOrderResponseUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  items: BatchPlaceOrderItemResponseUTA[];
+}
+⋮----
+export interface OrderDetailsUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  orderId: string;
+  clientOid: string;
+  /**
+   * Order status:
+   * - 0: notTriggered (conditional order, not triggered)
+   * - 1: triggered (conditional order, triggered but not live)
+   * - 2: live (not filled)
+   * - 3: filled (fully filled)
+   * - 4: partial filled (partially filled, still active)
+   * - 5: canceled (no fills, fully canceled)
+   * - 6: partial canceled (partially filled, remainder canceled)
+   * Changed from String to Number for UTA as of 2026.01.17
+   */
+  status: number;
+  filledSize: string;
+  avgPrice: string;
+  fee: string;
+  feeCurrency: string;
+  tax: string;
+  tradeId: string;
+  symbol: string;
+  side: 'BUY' | 'SELL';
+  positionSide?: 'BOTH' | 'LONG' | 'SHORT';
+  orderType: 'LIMIT' | 'MARKET';
+  size: string;
+  sizeUnit: 'BASECCY' | 'QUOTECCY' | 'UNIT';
+  price: string;
+  leverage?: string;
+  reduceOnly?: boolean;
+  marginMode?: 'ISOLATED' | 'CROSS';
+  stp?: 'DC' | 'CO' | 'CN' | 'CB' | '';
+  /**
+   * Time in Force. Added 'RPI' as of 2025.01.02
+   */
+  timeInForce: 'GTC' | 'IOC' | 'GTT' | 'FOK' | 'RPI';
+  /** UTA V1+V2: enum value instead of descriptive cancellation reason (2026.08.27) */
+  cancelReason?: number | string;
+  cancelSize: string;
+  cancelAfter?: number;
+  triggerDirection?: 'UP' | 'DOWN';
+  triggerPrice?: string;
+  triggerPriceType?: 'TP' | 'IP' | 'MP';
+  tpTriggerPrice?: string;
+  tpTriggerPriceType?: 'TP' | 'IP' | 'MP';
+  tpOrderPrice?: string;
+  slTriggerPrice?: string;
+  slTriggerPriceType?: 'TP' | 'IP' | 'MP';
+  slOrderPrice?: string;
+  postOnly?: boolean;
+  tags?: string;
+  /** Broker tag, max 50 chars (2026.09.21) */
+  brokerTag?: string;
+  triggerOrderId?: string;
+  /** Order creation time in nanoseconds (standardized as of 2026.01.12) */
+  orderTime: number;
+  /** Latest order update time in nanoseconds (standardized as of 2026.01.12) */
+  updatedTime: number;
+}
+⋮----
+/**
+   * Order status:
+   * - 0: notTriggered (conditional order, not triggered)
+   * - 1: triggered (conditional order, triggered but not live)
+   * - 2: live (not filled)
+   * - 3: filled (fully filled)
+   * - 4: partial filled (partially filled, still active)
+   * - 5: canceled (no fills, fully canceled)
+   * - 6: partial canceled (partially filled, remainder canceled)
+   * Changed from String to Number for UTA as of 2026.01.17
+   */
+⋮----
+/**
+   * Time in Force. Added 'RPI' as of 2025.01.02
+   */
+⋮----
+/** UTA V1+V2: enum value instead of descriptive cancellation reason (2026.08.27) */
+⋮----
+/** Broker tag, max 50 chars (2026.09.21) */
+⋮----
+/** Order creation time in nanoseconds (standardized as of 2026.01.12) */
+⋮----
+/** Latest order update time in nanoseconds (standardized as of 2026.01.12) */
+⋮----
+export interface GetOpenOrderListResponseUTA {
+  pageNumber: number;
+  pageSize?: number;
+  totalNum?: number;
+  totalPage?: number;
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  items: OrderDetailsUTA[];
+}
+⋮----
+export interface GetOrderHistoryResponseUTA {
+  lastId: number;
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  items: OrderDetailsUTA[];
+}
+⋮----
+export interface TradeHistoryItemUTA {
+  tradeId: string;
+  orderId: string;
+  symbol: string;
+  side: 'BUY' | 'SELL';
+  positionSide?: 'BOTH' | 'LONG' | 'SHORT';
+  type: 'LIMIT' | 'MARKET';
+  price: string;
+  size: string;
+  sizeUnit: 'BASECCY' | 'QUOTECCY' | 'UNIT';
+  value: string;
+  feeRate: string;
+  fee: string;
+  feeCurrency: string;
+  tax: string;
+  /** e.g. NORMAL, ADL. When ADL, liquidityRole is empty (as of 2026.08.12) */
+  fillType?: string;
+  /** Empty when fillType is ADL (as of 2026.08.12) */
+  liquidityRole?: 'TAKER' | 'MAKER' | '';
+  /** @deprecated Prefer liquidityRole */
+  liquidity?: 'TAKER' | 'MAKER' | '';
+  /** Execution time in nanoseconds (standardized as of 2026.01.12) */
+  executionTime: number;
+  /** Whether it is an RPI trade (added 2025.01.02, Futures only) */
+  isRpiTrade?: boolean;
+  /**
+   * Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) (2026.09.21).
+   * When fillType is ADL/LIQUID/SETTLEMENT, size is a positive value (2026.08.20).
+   */
+  fillPnl?: string;
+  clientOid?: string;
+  marginMode?: 'ISOLATED' | 'CROSS';
+  tradeType?: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  orderType?: 'LIMIT' | 'MARKET';
+}
+⋮----
+/** e.g. NORMAL, ADL. When ADL, liquidityRole is empty (as of 2026.08.12) */
+⋮----
+/** Empty when fillType is ADL (as of 2026.08.12) */
+⋮----
+/** @deprecated Prefer liquidityRole */
+⋮----
+/** Execution time in nanoseconds (standardized as of 2026.01.12) */
+⋮----
+/** Whether it is an RPI trade (added 2025.01.02, Futures only) */
+⋮----
+/**
+   * Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) (2026.09.21).
+   * When fillType is ADL/LIQUID/SETTLEMENT, size is a positive value (2026.08.20).
+   */
+⋮----
+export interface AmendOrderResponseUTA {
+  orderId: string;
+  clientOid: string | null;
+}
+⋮----
+export interface GetTradeHistoryResponseUTA {
+  lastId: number;
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  items: TradeHistoryItemUTA[];
+}
+⋮----
+export interface CancelOrderResponseUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  orderId?: string;
+  clientOid?: string;
+  /** Timestamp when system completes order cancellation request (nanoseconds). Only for unified accounts */
+  ts?: number;
+}
+⋮----
+/** Timestamp when system completes order cancellation request (nanoseconds). Only for unified accounts */
+⋮----
+export interface BatchCancelOrderItemResponseUTA {
+  code?: string;
+  msg?: string;
+  orderId?: string;
+  clientOid?: string;
+  /** Timestamp when system completes order cancellation request (nanoseconds). Not supported for classic accounts */
+  ts?: number;
+}
+⋮----
+/** Timestamp when system completes order cancellation request (nanoseconds). Not supported for classic accounts */
+⋮----
+export interface BatchCancelOrdersResponseUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
+  items: BatchCancelOrderItemResponseUTA[];
+}
+⋮----
+/** Batch cancel by symbol - Classic response (orderId list) */
+export interface BatchCancelOrdersBySymbolItemClassicUTA {
+  orderId: string;
+}
+⋮----
+/** Batch cancel by symbol - UTA response (full result per order) */
+export interface BatchCancelOrdersBySymbolItemUTA {
+  code?: string;
+  msg?: string;
+  orderId?: string;
+  ts?: number;
+  clientOid?: string | null;
+}
+⋮----
+export interface BatchCancelOrdersBySymbolResponseUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'MARGIN';
+  ts?: number;
+  items:
+    | BatchCancelOrdersBySymbolItemClassicUTA[]
+    | BatchCancelOrdersBySymbolItemUTA[];
+}
+⋮----
+export interface DCPResponseUTA {
+  tradeType: 'SPOT' | 'FUTURES' | 'MARGIN';
+  symbol: string[]; // Empty means effective for all symbols
+  systemTime: number; // Time when system received request (in seconds)
+  triggerTime: number; // Trigger cancellation time (in seconds)
+}
+⋮----
+symbol: string[]; // Empty means effective for all symbols
+systemTime: number; // Time when system received request (in seconds)
+triggerTime: number; // Trigger cancellation time (in seconds)
+⋮----
+/**
+ * Position Response Types
+ */
+⋮----
+export interface PositionUTA {
+  id: string;
+  symbol: string;
+  marginMode: 'CROSS' | 'ISOLATED';
+  size: string; // Positive = long, negative = short
+  entryPrice: string;
+  positionValue: string;
+  /** Margin occupied by the futures position */
+  positionMargin: string;
+  markPrice: string;
+  leverage: string;
+  unrealizedPnL: string;
+  realizedPnL: string;
+  initialMargin: string;
+  mmr: string; // Maintenance Margin Rate
+  maintenanceMargin: string;
+  /** Timestamp when position was first opened (nanoseconds, standardized as of 2026.01.12) */
+  creationTime: number;
+  /** Latest position update time (leverage/size changes). Added 2026.08.12 */
+  updateTime?: number;
+  /** Estimated liquidation price (as of 2026.04.09) */
+  liquidationPrice: string;
+  /** ADL ranking percentile (0.12 = 12%). Added 2026.05.15 */
+  adlPercentage: string;
+  /** Isolated futures risk ratio (0.65 = 65%). Empty for cross margin positions */
+  riskRatio: string;
+}
+⋮----
+size: string; // Positive = long, negative = short
+⋮----
+/** Margin occupied by the futures position */
+⋮----
+mmr: string; // Maintenance Margin Rate
+⋮----
+/** Timestamp when position was first opened (nanoseconds, standardized as of 2026.01.12) */
+⋮----
+/** Latest position update time (leverage/size changes). Added 2026.08.12 */
+⋮----
+/** Estimated liquidation price (as of 2026.04.09) */
+⋮----
+/** ADL ranking percentile (0.12 = 12%). Added 2026.05.15 */
+⋮----
+/** Isolated futures risk ratio (0.65 = 65%). Empty for cross margin positions */
+⋮----
+export interface PositionHistoryItemUTA {
+  closeId: string;
+  symbol: string;
+  marginMode: 'CROSS' | 'ISOLATED';
+  side: 'LONG' | 'SHORT';
+  entryPrice: string;
+  closePrice: string;
+  avgClosePrice: string;
+  maxSize: string;
+  leverage: string;
+  realizedPnL: string;
+  fee: string;
+  tax: string;
+  fundingFee: string;
+  /** Position opening timestamp (nanoseconds, standardized as of 2026.01.12) */
+  creationTime: number;
+  /** Position closing timestamp (nanoseconds, standardized as of 2026.01.12) */
+  closingTime: number;
+}
+⋮----
+/** Position opening timestamp (nanoseconds, standardized as of 2026.01.12) */
+⋮----
+/** Position closing timestamp (nanoseconds, standardized as of 2026.01.12) */
+⋮----
+export interface GetPositionsHistoryResponseUTA {
+  items: PositionHistoryItemUTA[];
+  lastId?: number;
+}
+⋮----
+/** Row from Get Third-Party Custody Currencies */
+export interface ThirdPartyCustodyCurrencyUTA {
+  custodian: string;
+  currency: string;
+  precision: number;
+}
+⋮----
+/** Row from Get Third-Party Custody Account Currency Limits */
+export interface ThirdPartyCustodyQuotaUTA {
+  custodian: string;
+  currency: string;
+  /** Remaining custodial quota (shared across custodian sub-accounts under master) */
+  custodyQuota: string;
+}
+⋮----
+/** Remaining custodial quota (shared across custodian sub-accounts under master) */
+⋮----
+export interface PositionTierUTA {
+  symbol: string;
+  tier: number; // Current tier of user
+  maxSize: string; // Upper limit (USDT) (included)
+  minSize: string; // Lower limit (USDT)
+  maxLeverage: string;
+  initialMarginRate: string;
+  maintainMarginRate: string;
+}
+⋮----
+tier: number; // Current tier of user
+maxSize: string; // Upper limit (USDT) (included)
+minSize: string; // Lower limit (USDT)
+⋮----
+export interface BatchModifyMarginModeItemUTA {
+  symbol: string;
+  marginMode: string;
+  code: string;
+  msg: string;
+}
+⋮----
+export interface BatchModifyMarginModeResponseUTA {
+  ts: number;
+  items: BatchModifyMarginModeItemUTA[];
+}
+⋮----
+export interface ModifyIsolatedFuturesMarginResponseUTA {
+  ts: number;
+}
+⋮----
+export interface RateLimitItemUTA {
+  uid: string;
+  rate: number;
+}
+⋮----
+export interface GetRateLimitResponseUTA {
+  list: RateLimitItemUTA[];
+}
+⋮----
+export interface GetRateLimitCapResponseUTA {
+  vipLevel: number;
+  mainRateLimit: number;
+  subRateLimit: number;
+  allocatedQuota: number;
+  remainingQuota: number;
+  defaultQuota: number;
+}
+⋮----
+export interface SetSubAccountsRateLimitResultUTA {
+  uid: string;
+  rate: number;
+  code: string;
+  msg: string;
+}
+⋮----
+export interface SetSubAccountsRateLimitResponseUTA {
+  items: SetSubAccountsRateLimitResultUTA[];
+}
+⋮----
+export interface SubAccountListItemUTA {
+  userId: string | null;
+  uid: number;
+  subName: string;
+  status: number;
+  type: number;
+  access: string;
+  createdAt: number;
+  remarks?: string;
+  tradeTypes: string[];
+  openedTradeTypes: string[];
+}
+⋮----
+export interface GetSubAccountListResponseUTA {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: SubAccountListItemUTA[];
+}
+⋮----
+export interface SetKcsFeeDeductionResponseUTA {
+  enabled: boolean;
+}
+⋮----
+export interface DepositHistoryItemUTA {
+  id: string;
+  currency: string;
+  status: string;
+  address: string;
+  memo?: string;
+  isInner: boolean;
+  amount: string;
+  fee: string;
+  walletTxId?: string | null;
+  createdAt: number;
+  updatedAt: number;
+  remark?: string;
+  arrears?: boolean;
+  subStatus?: string | null;
+  url?: string | null;
+  statusRemark?: string;
+  preConfirms?: number;
+  confirms?: number;
+  currentConfirms?: number;
+  chainId?: string;
+}
+⋮----
+export interface GetDepositHistoryResponseUTA {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: DepositHistoryItemUTA[];
+}
+⋮----
+export interface WithdrawalHistoryItemUTA {
+  id: string;
+  currency: string;
+  status: string;
+  address: string;
+  memo?: string;
+  isInner: boolean;
+  amount: string;
+  fee: string;
+  failureReason?: string;
+  failureReasonMsg?: string | null;
+  walletTxId?: string | null;
+  createdAt: number;
+  updatedAt: number;
+  remark?: string;
+  subStatus?: string | null;
+  chainId?: string;
+}
+⋮----
+export interface GetWithdrawalHistoryResponseUTA {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: WithdrawalHistoryItemUTA[];
+}
+⋮----
+export interface InterestRateIndexItemUTA {
+  ts: number;
+  symbol: string;
+  interestRate: string;
+}
+⋮----
+export interface GetInterestRateIndexResponseUTA {
+  items: InterestRateIndexItemUTA[];
+  lastId?: number;
+}
+⋮----
+export interface GetTradeStatisticsResponseUTA {
+  spot: { turnoverOf24h: string };
+  futures: { turnoverOf24h: string };
+}
+⋮----
+export interface GetCallAuctionInfoResponseUTA {
+  symbol: string;
+  estimatedPrice: string;
+  estimatedSize: string;
+  sellOrderRangeLowPrice: string;
+  sellOrderRangeHighPrice: string;
+  buyOrderRangeLowPrice: string;
+  buyOrderRangeHighPrice: string;
+  time: number;
+}
+
+================
 File: src/SpotClient.ts
 ================
 import { nanoid } from 'nanoid';
@@ -13783,9 +15220,9 @@ getServiceStatus(): Promise<APISuccessResponse<ServiceStatus>>
    */
 ⋮----
 /**
-   * Get Account Summary Info
+   * Get Account Summary Info (V3)
    *
-   * This endpoint can be used to obtain account summary information.
+   * Returns the VIP level and shared sub-account quota usage (2026.11.06).
    */
 getAccountSummary(): Promise<APISuccessResponse<SpotAccountSummary>>
 ⋮----
@@ -15935,1350 +17372,6 @@ getIsolatedMarginAccount(params: {
 }): Promise<APISuccessResponse<SingleIsolatedMarginAccountInfo>>
 
 ================
-File: examples/WebSockets/ws-public-futures-pro-v2.ts
-================
-import {
-  WebsocketClient,
-  WS_KEY_MAP,
-  WsTopicRequest,
-} from '../../src/index.js';
-// import { DefaultLogger, WebsocketClient, WsTopicRequest } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
-⋮----
-async function start()
-⋮----
-// Optional: fully customise the logging experience by injecting a custom logger
-// const logger: typeof DefaultLogger = {
-//   ...DefaultLogger,
-//   trace: (...params) => {
-//     if (
-//       [
-//         'Sending ping',
-//         'Sending upstream ws message: ',
-//         'Received pong',
-//         'Decompressed message event from buffer',
-//       ].includes(params[0])
-//     ) {
-//       return;
-//     }
-//     console.log('trace', params);
-//   },
-// };
-⋮----
-// const client = new WebsocketClient({}, logger);
-⋮----
-// Data received
-⋮----
-// Something happened, attempting to reconenct
-⋮----
-// Reconnect successful
-⋮----
-// Connection closed. If unexpected, expect reconnect -> reconnected.
-⋮----
-// Reply to a request, e.g. "subscribe"/"unsubscribe"/"authenticate"
-⋮----
-// throw new Error('res?');
-⋮----
-/**
-   * The following example demonstrates the ways to consume data from the V2 (Pro) WebSockets. For the V1 examples, ws-public-futures-v1.ts
-   */
-⋮----
-// Optional: await a connection to be ready before subscribing (this is not necessary)
-// await client.connect(WS_KEY_MAP.futuresPublicProV2);
-⋮----
-/**
-     * Structure your requests into the following format. The below example will be sent as per the example in the docs. The parameters are automatically merged into the request. Just follow the example below:
-     * {
-     *    "id": "1545910660739", // automatically generated by SDK
-     *    "action": "SUBSCRIBE", // automatically added by SDK
-     *    "channel":"kline",
-     *    "tradeType": "FUTURES",       // SPOT / FUTURES
-     *    "symbol": "XBTUSDTM",
-     *    "interval": "1min"
-     * }
-     *
-     * https://www.kucoin.com/docs-new/3470223w0
-     */
-⋮----
-/**
-       * Anything in the payload will be merged into the subscribe "request", allowing you to send misc parameters supported by the exchange.
-       * For more info on parameters, see: https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
-       */
-⋮----
-// this needs to match the WsKey below.
-// tradeType: SPOT ==> spotPublicProV2
-// tradeType: FUTURES ==> futuresPublicProV2
-⋮----
-/**
-     * Or, send an array of structured objects with parameters, if you wanted to send multiple in one request
-     *
-     */
-⋮----
-// BTCUSDT tickers for FUTURES market
-// https://www.kucoin.com/docs-new/3470222w0
-⋮----
-// BTCUSDT orderbook updates for FUTURES market
-// https://www.kucoin.com/docs-new/3470221w0
-⋮----
-depth: '5', // 1 / 5 / 50 / increment / increment@10ms (2026.06.17: snapshot + 500-level, 10ms batch)
-rpiFilter: 0, // 0：Only NoneRPI orders [Default]  1(Only Support Futures)：NoneRPI+ RPI Orders. When rpiFilter=1, "depth" only supports 5/50.
-⋮----
-// BTCUSDT trades for spot market
-// https://www.kucoin.com/docs-new/3470224w0
-⋮----
-// UTA public Funding Fee channel
-// https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
-⋮----
-// UTA V2 public Funding Fee Rate (`symbols` for multiple contracts, 2026.08.27)
-// https://www.kucoin.com/docs-new/3470357w0
-⋮----
-// UTA V2 public All Funding Fee Rates
-// https://www.kucoin.com/docs-new/3470412w0
-⋮----
-// UTA public Mark Price channel
-
-================
-File: src/types/response/uta-types.ts
-================
-/**
- * Unified Trading Account Response Types
- */
-⋮----
-export interface AnnouncementItemUTA {
-  id: number;
-  title: string;
-  type: string[];
-  description: string;
-  releaseTime: number;
-  language: string;
-  url: string;
-}
-⋮----
-export interface GetAnnouncementsResponseUTA {
-  totalNumber: number;
-  totalPage: number;
-  pageNumber: number;
-  pageSize: number;
-  list: AnnouncementItemUTA[];
-}
-⋮----
-export interface CurrencyChainUTA {
-  chainName: string;
-  minWithdrawSize: string | null;
-  minDepositSize: string | null;
-  withdrawFeeRate: string;
-  minWithdrawFee: string;
-  isWithdrawEnabled: boolean;
-  isDepositEnabled: boolean;
-  confirms?: number;
-  preConfirms: number;
-  contractAddress?: string;
-  withdrawPrecision: number;
-  maxWithdrawSize: string | null;
-  maxDepositSize: string | null;
-  needTag: boolean;
-  /** @deprecated UTA V2 renamed to chain (2026.08.27) */
-  chainId?: string;
-  /** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
-  chain?: string;
-  addressRegex?: string;
-  memoRegex?: string;
-  depositFeeRate?: string;
-  depositTierFee?: string;
-  fixedDepositFee?: string;
-  maxDepositFee?: string;
-  maxWithdrawFee?: string;
-  isMemoRequired?: boolean;
-}
-⋮----
-/** @deprecated UTA V2 renamed to chain (2026.08.27) */
-⋮----
-/** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
-⋮----
-export interface GetCurrencyResponseUTA {
-  currency: string;
-  name: string;
-  fullName: string;
-  precision: number;
-  confirms?: number | null;
-  contractAddress?: string | null;
-  /** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
-  isMarginEnabled?: boolean;
-  /** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
-  isDebitEnabled?: boolean;
-  /** UTA V2 chain list (2026.08.27). Replaces items. */
-  list: CurrencyChainUTA[];
-  /** @deprecated UTA V2 renamed to list */
-  items?: CurrencyChainUTA[];
-}
-⋮----
-/** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
-⋮----
-/** Removed from UTA V2 Get Currencies currency-level payload (2026.08.27) */
-⋮----
-/** UTA V2 chain list (2026.08.27). Replaces items. */
-⋮----
-/** @deprecated UTA V2 renamed to list */
-⋮----
-export type GetCurrenciesResponseUTA = GetCurrencyResponseUTA[];
-⋮----
-export interface SymbolUTA {
-  symbol: string;
-  name?: string;
-  baseCurrency: string;
-  quoteCurrency: string;
-  market?: string;
-  minBaseOrderSize?: string;
-  minQuoteOrderSize?: string;
-  maxBaseOrderSize?: string | number;
-  maxQuoteOrderSize?: string;
-  baseOrderStep?: string;
-  quoteOrderStep?: string;
-  tickSize?: string | number;
-  feeCurrency?: string;
-  tradingStatus?:
-    | string
-    | 'TradingEnabled'
-    | 'TradingDisabled'
-    | 'Init'
-    | 'Open'
-    | 'PrepareSettled'
-    | 'BeingSettled'
-    | 'Settled'
-    | 'Paused'
-    | 'Closed'
-    | 'CancelOnly';
-  marginMode?: string;
-  priceLimitRatio?: string;
-  /** UTA V2: classA / classB / classC. Numeric 1/2/3 remains on older payloads. */
-  feeCategory?: number | 'classA' | 'classB' | 'classC' | string;
-  makerFeeCoefficient?: string;
-  takerFeeCoefficient?: string;
-  st?: boolean;
-  settlementCurrency?: string;
-  contractType?: string;
-  isInverse?: boolean;
-  launchTime?: number;
-  expiryTime?: number | string | null;
-  settlementTime?: number | string | null;
-  maxPrice?: string | number;
-  lotSize?: string | number;
-  /**
-   * Unit size. As of 2026.01.12:
-   * - For inverse contracts: changed from -1 to 1 (1 contract = 1 USD)
-   * - For Futures: unitSize indicates contract size
-   */
-  unitSize?: string | number;
-  makerFeeRate?: string | number;
-  takerFeeRate?: string | number;
-  settlementFeeRate?: string | number | null;
-  maxLeverage?: number | string;
-  indexSourceExchanges?: string[];
-  k?: string | number;
-  m?: string | number;
-  f?: string | number;
-  mmrLimit?: string | number;
-  mmrLevConstant?: string | number;
-  alertRiskRatio?: string;
-  liquidationRiskRatio?: string;
-  baseBorrowEnable?: boolean | string;
-  quoteBorrowEnable?: boolean | string;
-  baseTransferInEnable?: boolean | string;
-  quoteTransferInEnable?: boolean | string;
-  /** Display symbol for Futures (added 2025.12.26 & 2026.01.12) */
-  displaySymbol?: string;
-  /** Display base currency for Futures (added 2025.12.26 & 2026.01.12) */
-  displayBaseCurrency?: string;
-  maxMarketOrderSize?: string;
-  preMarketToPerpDate?: number | string | null;
-  minFunds?: string;
-  callauctionIsEnabled?: boolean;
-  callauctionPriceFloor?: string | null;
-  callauctionPriceCeiling?: string | null;
-  callauctionFirstStageStartTime?: number | string | null;
-  callauctionSecondStageStartTime?: number | string | null;
-  callauctionThirdStageStartTime?: number | string | null;
-  tradingStartTime?: number | string | null;
-}
-⋮----
-/** UTA V2: classA / classB / classC. Numeric 1/2/3 remains on older payloads. */
-⋮----
-/**
-   * Unit size. As of 2026.01.12:
-   * - For inverse contracts: changed from -1 to 1 (1 contract = 1 USD)
-   * - For Futures: unitSize indicates contract size
-   */
-⋮----
-/** Display symbol for Futures (added 2025.12.26 & 2026.01.12) */
-⋮----
-/** Display base currency for Futures (added 2025.12.26 & 2026.01.12) */
-⋮----
-export interface GetSymbolResponseUTA {
-  tradeType: string;
-  list: SymbolUTA[];
-}
-⋮----
-export interface TickerUTA {
-  symbol: string;
-  name?: string;
-  bestBidPrice: string;
-  bestBidSize: string;
-  bestAskPrice: string;
-  bestAskSize: string;
-  high: string;
-  low: string;
-  baseVolume: string;
-  quoteVolume: string;
-  lastPrice: string;
-  open: string;
-  size: string;
-  /** Absolute price change over 24h (as of 2026.07.01) */
-  priceChange?: string;
-  /** Relative price change over 24h, e.g. 0.0036 = 0.36% (as of 2026.07.01) */
-  priceChangePercent?: string;
-  /** Index price (Futures tickers; as of 2026.07.01) */
-  indexPrice?: string;
-  /** Mark price (Futures tickers; as of 2026.07.01) */
-  markPrice?: string;
-}
-⋮----
-/** Absolute price change over 24h (as of 2026.07.01) */
-⋮----
-/** Relative price change over 24h, e.g. 0.0036 = 0.36% (as of 2026.07.01) */
-⋮----
-/** Index price (Futures tickers; as of 2026.07.01) */
-⋮----
-/** Mark price (Futures tickers; as of 2026.07.01) */
-⋮----
-/** Fiat prices keyed by currency symbol (UTA Get Fiat Price) */
-export type GetFiatPriceResponseUTA = Record<string, string>;
-⋮----
-export interface GetTickerResponseUTA {
-  tradeType: string;
-  /** Timestamp in nanoseconds (as of 2026.01.12) */
-  ts: number;
-  list: TickerUTA[];
-}
-⋮----
-/** Timestamp in nanoseconds (as of 2026.01.12) */
-⋮----
-export interface TradeUTA {
-  sequence: string | number;
-  tradeId: string;
-  price: string;
-  size: string;
-  side: 'buy' | 'sell';
-  /** Timestamp in nanoseconds */
-  ts: number;
-  /** Whether it is an RPI trade (Futures only) */
-  isRpiTrade?: boolean;
-}
-⋮----
-/** Timestamp in nanoseconds */
-⋮----
-/** Whether it is an RPI trade (Futures only) */
-⋮----
-export interface GetTradesResponseUTA {
-  tradeType: string;
-  list: TradeUTA[];
-}
-⋮----
-export interface GetOrderBookResponseUTA {
-  tradeType: string;
-  symbol: string;
-  /** Sequence number. Changed from string to number for Spot as of 2026.01.17 */
-  sequence: number;
-  /**
-   * Bids array, ordered from high to low.
-   * When rpiFilter=0 (or not set): each entry is [price, size]
-   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
-   * As of 2026.01.17: All values are strings
-   */
-  bids: string[][];
-  /**
-   * Asks array, ordered from low to high.
-   * When rpiFilter=0 (or not set): each entry is [price, size]
-   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
-   * As of 2026.01.17: All values are strings
-   */
-  asks: string[][];
-  /** Timestamp in nanoseconds (Futures only) */
-  ts?: number;
-}
-⋮----
-/** Sequence number. Changed from string to number for Spot as of 2026.01.17 */
-⋮----
-/**
-   * Bids array, ordered from high to low.
-   * When rpiFilter=0 (or not set): each entry is [price, size]
-   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
-   * As of 2026.01.17: All values are strings
-   */
-⋮----
-/**
-   * Asks array, ordered from low to high.
-   * When rpiFilter=0 (or not set): each entry is [price, size]
-   * When rpiFilter=1: each entry is [price, noneRPISize, RPISize]
-   * As of 2026.01.17: All values are strings
-   */
-⋮----
-/** Timestamp in nanoseconds (Futures only) */
-⋮----
-export interface GetKlinesResponseUTA {
-  tradeType: string;
-  symbol: string;
-  list: string[][]; // [time, open, close, high, low, volume, turnover]
-}
-⋮----
-list: string[][]; // [time, open, close, high, low, volume, turnover]
-⋮----
-export interface GetCurrentFundingRateResponseUTA {
-  symbol: string;
-  nextFundingRate: number | string;
-  fundingTime: number;
-  fundingRateCap: number | string;
-  fundingRateFloor: number | string;
-  /** Current funding settlement interval (ms); as of 2026.04.19 */
-  currentGranularity: number;
-  /** New interval after change (ms); as of 2026.04.19 */
-  newGranularity: number;
-  /** When newGranularity takes effect (ms); as of 2026.04.19 */
-  newGranularityStartTime: number;
-}
-⋮----
-/** Current funding settlement interval (ms); as of 2026.04.19 */
-⋮----
-/** New interval after change (ms); as of 2026.04.19 */
-⋮----
-/** When newGranularity takes effect (ms); as of 2026.04.19 */
-⋮----
-export interface GetIndexPriceDecompositionUTA {
-  exchange: string;
-  price: string;
-  weight: string;
-}
-⋮----
-export interface GetIndexPriceItemUTA {
-  symbol: string;
-  granularity: number;
-  ts: number;
-  indexPrice: string;
-  decompositionList?: GetIndexPriceDecompositionUTA[];
-}
-⋮----
-export interface GetIndexPriceResponseUTA {
-  items: GetIndexPriceItemUTA[];
-}
-⋮----
-export interface FundingRateHistoryItemUTA {
-  fundingRate: number;
-  ts: number;
-}
-⋮----
-export interface GetHistoryFundingRateResponseUTA {
-  symbol: string;
-  list: FundingRateHistoryItemUTA[];
-}
-⋮----
-export interface ModifyMarginCrossLeverageResponseUTA {
-  currency?: string;
-  leverage?: string;
-}
-⋮----
-/** One row from Get Leverage (UTA) — margin uses currency, futures uses symbol */
-export interface GetLeverageItemUTA {
-  leverage: string;
-  marginMode: string;
-  currency?: string;
-  symbol?: string;
-}
-⋮----
-export interface PrivateFundingFeeHistoryItemUTA {
-  symbol: string;
-  marginMode: 'CROSS' | 'ISOLATED';
-  fundingRate: string;
-  markPrice: string;
-  size: string;
-  positionValue: string;
-  fundingFee: string;
-  settleCurrency: string;
-  settlementTime: number;
-}
-⋮----
-export interface GetPrivateFundingFeeHistoryResponseUTA {
-  lastId: number;
-  items: PrivateFundingFeeHistoryItemUTA[];
-}
-⋮----
-export interface GetBorrowingRatesAndLimitsResponseUTA {
-  currentRateHourly: string;
-  currentRateDaily: string;
-  borrowLimitTotal: string;
-  borrowLimitTotalHold: string;
-  borrowLimitHold: string;
-  interestFreeBorrowLimit: string;
-}
-⋮----
-export interface BorrowableCurrencyUTA {
-  currency: string;
-}
-⋮----
-export interface GetCrossMarginConfigResponseUTA {
-  maxLeverage: number;
-  alertRiskRatio: string;
-  liquidationRiskRatio: string;
-  currencyList: string[];
-}
-⋮----
-export interface GetServiceStatusResponseUTA {
-  tradeType: string;
-  serverStatus: 'open' | 'close' | 'cancelonly';
-  msg: string;
-}
-⋮----
-/**
- * Account Response Types
- */
-⋮----
-export interface AccountCurrencyUTA {
-  currency: string;
-  /** @deprecated UTA V2 renamed to locked (2026.08.27) */
-  hold?: string;
-  /** UTA V2 locked amount (2026.08.27). Replaces hold. */
-  locked?: string;
-  available: string;
-  balance: string;
-  equity: string;
-  /** Platform-level margin collateral status (as of 2026.07.01) */
-  collateralStatus?: string;
-  /** Potential borrow reserved by open orders (UTA; as of 2026.04.19) */
-  potentialBorrow?: string;
-  liability?: string;
-  totalCrossMargin?: string;
-  crossPosMargin?: string;
-  crossOrderMargin?: string;
-  crossUnPnl?: string;
-  isolatedPosMargin?: string;
-  isolatedOrderMargin?: string;
-  isolatedFundingFeeMargin?: string;
-  isolatedUnPnl?: string;
-  /** @deprecated UTA V2 renamed to liabilityPrincipal (2026.08.27) */
-  liabilityPrinciple?: string;
-  liabilityPrincipal?: string;
-  liabilityInterest?: string;
-  unrealisedPnl?: string;
-}
-⋮----
-/** @deprecated UTA V2 renamed to locked (2026.08.27) */
-⋮----
-/** UTA V2 locked amount (2026.08.27). Replaces hold. */
-⋮----
-/** Platform-level margin collateral status (as of 2026.07.01) */
-⋮----
-/** Potential borrow reserved by open orders (UTA; as of 2026.04.19) */
-⋮----
-/** @deprecated UTA V2 renamed to liabilityPrincipal (2026.08.27) */
-⋮----
-export interface AccountDataUTA {
-  accountSubtype?: string; // For ISOLATED (trading pair) or FUTURES (settlement currency)
-  riskRatio?: string;
-  currencies: AccountCurrencyUTA[];
-}
-⋮----
-accountSubtype?: string; // For ISOLATED (trading pair) or FUTURES (settlement currency)
-⋮----
-export interface GetClassicAccountResponseUTA {
-  accountType: string;
-  ts: number;
-  accounts: AccountDataUTA[];
-}
-⋮----
-export interface GetAccountOverviewResponseUTA {
-  accountType: string;
-  riskRatio: string;
-  equity: string;
-  liability: string;
-  availableMargin: string;
-  adjustedEquity: string;
-  im: string;
-  mm: string;
-}
-⋮----
-export interface SubAccountUserUTA {
-  uid: number;
-  /** @deprecated UTA V2 renamed to accounts (2026.08.27) */
-  accountList?: {
-    accountType:
-      | 'FUNDING'
-      | 'SPOT'
-      | 'FUTURES'
-      | 'CROSS'
-      | 'ISOLATED'
-      | 'OPTIONS'
-      | 'UNIFIED';
-    accountSubType: string | null;
-    currencyList: AccountCurrencyUTA[];
-  }[];
-  /** UTA V2 accounts list (2026.08.27). Replaces accountList. OPTIONS removed. */
-  accounts?: {
-    accountType:
-      | 'FUNDING'
-      | 'SPOT'
-      | 'FUTURES'
-      | 'CROSS'
-      | 'ISOLATED'
-      | 'UNIFIED';
-    /** UTA V2 renamed from accountSubType */
-    subAccountType?: string | null;
-    /** @deprecated UTA V2 renamed to subAccountType */
-    accountSubType?: string | null;
-    /** UTA V2 renamed from currencyList */
-    currencies?: AccountCurrencyUTA[];
-    /** @deprecated UTA V2 renamed to currencies */
-    currencyList?: AccountCurrencyUTA[];
-    /** UTA V2 renamed from liabilityPrinciple */
-    liabilityPrincipal?: string;
-    /** @deprecated UTA V2 renamed to liabilityPrincipal */
-    liabilityPrinciple?: string;
-  }[];
-}
-⋮----
-/** @deprecated UTA V2 renamed to accounts (2026.08.27) */
-⋮----
-/** UTA V2 accounts list (2026.08.27). Replaces accountList. OPTIONS removed. */
-⋮----
-/** UTA V2 renamed from accountSubType */
-⋮----
-/** @deprecated UTA V2 renamed to subAccountType */
-⋮----
-/** UTA V2 renamed from currencyList */
-⋮----
-/** @deprecated UTA V2 renamed to currencies */
-⋮----
-/** UTA V2 renamed from liabilityPrinciple */
-⋮----
-/** @deprecated UTA V2 renamed to liabilityPrincipal */
-⋮----
-export interface GetSubAccountResponseUTA {
-  ts: number;
-  userList: SubAccountUserUTA[];
-}
-⋮----
-export interface GetTransferQuotasResponseUTA {
-  currency: string;
-  transferable: string;
-  accountType: 'FUNDING' | 'SPOT' | 'FUTURES' | 'ISOLATED' | 'UNIFIED';
-}
-⋮----
-export interface FlexTransferResponseUTA {
-  orderId: string;
-  clientOid: string;
-}
-⋮----
-export interface SubAccountTransferPermissionUTA {
-  subUid: string;
-  subToSub: boolean;
-}
-⋮----
-export interface GetAccountModeResponseUTA {
-  selfAccountMode: 'CLASSIC' | 'UNIFIED';
-  unifiedSubAccount: number[];
-  classicSubAccount: number[];
-}
-⋮----
-export interface FeeRateItemUTA {
-  symbol: string;
-  takerFeeRate: string;
-  makerFeeRate: string;
-}
-⋮----
-export interface GetFeeRateResponseUTA {
-  tradeType: string;
-  list: FeeRateItemUTA[];
-}
-⋮----
-export interface AccountLedgerItemUTA {
-  accountType:
-    | 'FUNDING'
-    | 'SPOT'
-    | 'FUTURES'
-    | 'CROSS'
-    | 'ISOLATED'
-    | 'UNIFIED';
-  id: string;
-  currency: string;
-  direction: 'IN' | 'OUT';
-  businessType: string;
-  /** Change in funds balance. Always positive as of 2026.04.28; use direction (IN/OUT) for flow. */
-  amount: string;
-  balance: string;
-  fee: string;
-  tax: string;
-  remark: string;
-  /** Timestamp in nanoseconds (standardized as of 2026.01.12) */
-  ts: number;
-}
-⋮----
-/** Change in funds balance. Always positive as of 2026.04.28; use direction (IN/OUT) for flow. */
-⋮----
-/** Timestamp in nanoseconds (standardized as of 2026.01.12) */
-⋮----
-export interface GetAccountLedgerResponseUTA {
-  lastId?: number;
-  items?: AccountLedgerItemUTA[];
-}
-⋮----
-export type GetAccountLedgerResponseClassicUTA = AccountLedgerItemUTA[];
-⋮----
-export interface InterestHistoryItemUTA {
-  liability: string;
-  interest: string;
-  hourlyInterestRate: string;
-  currency: string;
-  ts: number;
-  interestFreeLiability: string;
-}
-⋮----
-export interface GetInterestHistoryResponseUTA {
-  items: InterestHistoryItemUTA[];
-  lastId: number;
-}
-⋮----
-export interface DepositAddressUTA {
-  address: string;
-  memo?: string;
-  /** @deprecated UTA V2 renamed to chain (2026.08.27) */
-  chainId?: string;
-  /** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
-  chain?: string;
-  /** @deprecated UTA V2 renamed to toAccountType (2026.08.27) */
-  to?: 'FUNDING' | 'SPOT' | 'UNIFIED';
-  /** UTA V2 destination account type (2026.08.27). Replaces to. */
-  toAccountType?: 'FUNDING' | 'SPOT' | 'UNIFIED';
-  currency: string;
-  contractAddress: string;
-  chainName: string;
-  expirationDate: string;
-  remark?: string;
-}
-⋮----
-/** @deprecated UTA V2 renamed to chain (2026.08.27) */
-⋮----
-/** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
-⋮----
-/** @deprecated UTA V2 renamed to toAccountType (2026.08.27) */
-⋮----
-/** UTA V2 destination account type (2026.08.27). Replaces to. */
-⋮----
-export interface WithdrawalQuotasUTA {
-  currency: string;
-  limitBTCAmount: string;
-  usedBTCAmount: string;
-  quotaCurrency: string;
-  limitQuotaCurrencyAmount: string;
-  usedQuotaCurrencyAmount: string;
-  remainAmount?: string;
-  availableAmount?: string;
-  withdrawMinFee?: string;
-  innerWithdrawMinFee?: string;
-  /** UTA V2 remaining quota (2026.08.27). Replaces remainAmount. */
-  remainingQuotaAmount?: string;
-  /** UTA V2 available withdraw amount (2026.08.27). Replaces availableAmount. */
-  availableWithdrawAmount?: string;
-  /** UTA V2 min withdraw fee (2026.08.27). Replaces withdrawMinFee. */
-  minWithdrawFee?: string;
-  /** UTA V2 min inner withdraw fee (2026.08.27). Replaces innerWithdrawMinFee. */
-  minInnerWithdrawFee?: string;
-  withdrawMinSize: string;
-  isWithdrawEnabled: boolean;
-  precision: number;
-  reason: string | null;
-  lockedAmount: string;
-  /** @deprecated UTA V2 renamed to chain (2026.08.27) */
-  chainId?: string;
-  /** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
-  chain?: string;
-  chainName: string;
-}
-⋮----
-/** UTA V2 remaining quota (2026.08.27). Replaces remainAmount. */
-⋮----
-/** UTA V2 available withdraw amount (2026.08.27). Replaces availableAmount. */
-⋮----
-/** UTA V2 min withdraw fee (2026.08.27). Replaces withdrawMinFee. */
-⋮----
-/** UTA V2 min inner withdraw fee (2026.08.27). Replaces innerWithdrawMinFee. */
-⋮----
-/** @deprecated UTA V2 renamed to chain (2026.08.27) */
-⋮----
-/** UTA V2 chain identifier (2026.08.27). Replaces chainId. */
-⋮----
-export interface SubmitWithdrawResponseUTA {
-  withdrawalId: string;
-}
-⋮----
-export interface AddSubAccountResponseUTA {
-  uid: number;
-  subName: string;
-  remarks: string;
-  access: string;
-}
-⋮----
-export interface AddSubAccountApiResponseUTA {
-  subName: string;
-  remark: string;
-  apiKey: string;
-  apiSecret: string;
-  apiVersion: number;
-  passphrase: string;
-  permission: string;
-  ipWhitelist?: string;
-  createdAt: number;
-}
-⋮----
-export interface KYCRegionUTA {
-  code: string;
-  enName: string;
-}
-⋮----
-export interface ApiKeyInfoUTA {
-  uid: number;
-  parentUid?: number;
-  region: string;
-  kycStatus: 0 | 1;
-  subName?: string;
-  remark: string;
-  apiKey: string;
-  apiVersion: number;
-  permission: string;
-  ipWhitelist?: string;
-  isMaster: boolean;
-  createdAt: number;
-  expiredAt?: number | null;
-  thirdPartyApp?: string;
-  siteType?: 'global' | 'turkey' | 'australia' | 'europe' | 'thailand';
-}
-⋮----
-/**
- * Order Response Types
- */
-⋮----
-export interface PlaceOrderResponseUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  orderId: string;
-  clientOid: string;
-  /** Timestamp when system completes order request in nanoseconds. Classic mode not supported */
-  ts?: number;
-  /** Borrow amount. Unified mode not supported */
-  borrowSize?: string;
-  /** Loan order ID. Unified mode not supported */
-  loanApplyId?: string;
-}
-⋮----
-/** Timestamp when system completes order request in nanoseconds. Classic mode not supported */
-⋮----
-/** Borrow amount. Unified mode not supported */
-⋮----
-/** Loan order ID. Unified mode not supported */
-⋮----
-export interface BatchPlaceOrderItemResponseUTA {
-  orderId?: string;
-  clientOid?: string;
-  symbol?: string;
-  code?: string;
-  msg?: string;
-}
-⋮----
-export interface BatchPlaceOrderResponseUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  items: BatchPlaceOrderItemResponseUTA[];
-}
-⋮----
-export interface OrderDetailsUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  orderId: string;
-  clientOid: string;
-  /**
-   * Order status:
-   * - 0: notTriggered (conditional order, not triggered)
-   * - 1: triggered (conditional order, triggered but not live)
-   * - 2: live (not filled)
-   * - 3: filled (fully filled)
-   * - 4: partial filled (partially filled, still active)
-   * - 5: canceled (no fills, fully canceled)
-   * - 6: partial canceled (partially filled, remainder canceled)
-   * Changed from String to Number for UTA as of 2026.01.17
-   */
-  status: number;
-  filledSize: string;
-  avgPrice: string;
-  fee: string;
-  feeCurrency: string;
-  tax: string;
-  tradeId: string;
-  symbol: string;
-  side: 'BUY' | 'SELL';
-  positionSide?: 'BOTH' | 'LONG' | 'SHORT';
-  orderType: 'LIMIT' | 'MARKET';
-  size: string;
-  sizeUnit: 'BASECCY' | 'QUOTECCY' | 'UNIT';
-  price: string;
-  leverage?: string;
-  reduceOnly?: boolean;
-  marginMode?: 'ISOLATED' | 'CROSS';
-  stp?: 'DC' | 'CO' | 'CN' | 'CB' | '';
-  /**
-   * Time in Force. Added 'RPI' as of 2025.01.02
-   */
-  timeInForce: 'GTC' | 'IOC' | 'GTT' | 'FOK' | 'RPI';
-  /** UTA V1+V2: enum value instead of descriptive cancellation reason (2026.08.27) */
-  cancelReason?: number | string;
-  cancelSize: string;
-  cancelAfter?: number;
-  triggerDirection?: 'UP' | 'DOWN';
-  triggerPrice?: string;
-  triggerPriceType?: 'TP' | 'IP' | 'MP';
-  tpTriggerPrice?: string;
-  tpTriggerPriceType?: 'TP' | 'IP' | 'MP';
-  tpOrderPrice?: string;
-  slTriggerPrice?: string;
-  slTriggerPriceType?: 'TP' | 'IP' | 'MP';
-  slOrderPrice?: string;
-  postOnly?: boolean;
-  tags?: string;
-  /** Broker tag, max 50 chars (2026.09.21) */
-  brokerTag?: string;
-  triggerOrderId?: string;
-  /** Order creation time in nanoseconds (standardized as of 2026.01.12) */
-  orderTime: number;
-  /** Latest order update time in nanoseconds (standardized as of 2026.01.12) */
-  updatedTime: number;
-}
-⋮----
-/**
-   * Order status:
-   * - 0: notTriggered (conditional order, not triggered)
-   * - 1: triggered (conditional order, triggered but not live)
-   * - 2: live (not filled)
-   * - 3: filled (fully filled)
-   * - 4: partial filled (partially filled, still active)
-   * - 5: canceled (no fills, fully canceled)
-   * - 6: partial canceled (partially filled, remainder canceled)
-   * Changed from String to Number for UTA as of 2026.01.17
-   */
-⋮----
-/**
-   * Time in Force. Added 'RPI' as of 2025.01.02
-   */
-⋮----
-/** UTA V1+V2: enum value instead of descriptive cancellation reason (2026.08.27) */
-⋮----
-/** Broker tag, max 50 chars (2026.09.21) */
-⋮----
-/** Order creation time in nanoseconds (standardized as of 2026.01.12) */
-⋮----
-/** Latest order update time in nanoseconds (standardized as of 2026.01.12) */
-⋮----
-export interface GetOpenOrderListResponseUTA {
-  pageNumber: number;
-  pageSize?: number;
-  totalNum?: number;
-  totalPage?: number;
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  items: OrderDetailsUTA[];
-}
-⋮----
-export interface GetOrderHistoryResponseUTA {
-  lastId: number;
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  items: OrderDetailsUTA[];
-}
-⋮----
-export interface TradeHistoryItemUTA {
-  tradeId: string;
-  orderId: string;
-  symbol: string;
-  side: 'BUY' | 'SELL';
-  positionSide?: 'BOTH' | 'LONG' | 'SHORT';
-  type: 'LIMIT' | 'MARKET';
-  price: string;
-  size: string;
-  sizeUnit: 'BASECCY' | 'QUOTECCY' | 'UNIT';
-  value: string;
-  feeRate: string;
-  fee: string;
-  feeCurrency: string;
-  tax: string;
-  /** e.g. NORMAL, ADL. When ADL, liquidityRole is empty (as of 2026.08.12) */
-  fillType?: string;
-  /** Empty when fillType is ADL (as of 2026.08.12) */
-  liquidityRole?: 'TAKER' | 'MAKER' | '';
-  /** @deprecated Prefer liquidityRole */
-  liquidity?: 'TAKER' | 'MAKER' | '';
-  /** Execution time in nanoseconds (standardized as of 2026.01.12) */
-  executionTime: number;
-  /** Whether it is an RPI trade (added 2025.01.02, Futures only) */
-  isRpiTrade?: boolean;
-  /**
-   * Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) (2026.09.21).
-   * When fillType is ADL/LIQUID/SETTLEMENT, size is a positive value (2026.08.20).
-   */
-  fillPnl?: string;
-  clientOid?: string;
-  marginMode?: 'ISOLATED' | 'CROSS';
-  tradeType?: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  orderType?: 'LIMIT' | 'MARKET';
-}
-⋮----
-/** e.g. NORMAL, ADL. When ADL, liquidityRole is empty (as of 2026.08.12) */
-⋮----
-/** Empty when fillType is ADL (as of 2026.08.12) */
-⋮----
-/** @deprecated Prefer liquidityRole */
-⋮----
-/** Execution time in nanoseconds (standardized as of 2026.01.12) */
-⋮----
-/** Whether it is an RPI trade (added 2025.01.02, Futures only) */
-⋮----
-/**
-   * Fill PnL. Empty string when data is before 2026.09.05 (UTC-8) (2026.09.21).
-   * When fillType is ADL/LIQUID/SETTLEMENT, size is a positive value (2026.08.20).
-   */
-⋮----
-export interface AmendOrderResponseUTA {
-  orderId: string;
-  clientOid: string | null;
-}
-⋮----
-export interface GetTradeHistoryResponseUTA {
-  lastId: number;
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  items: TradeHistoryItemUTA[];
-}
-⋮----
-export interface CancelOrderResponseUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  orderId?: string;
-  clientOid?: string;
-  /** Timestamp when system completes order cancellation request (nanoseconds). Only for unified accounts */
-  ts?: number;
-}
-⋮----
-/** Timestamp when system completes order cancellation request (nanoseconds). Only for unified accounts */
-⋮----
-export interface BatchCancelOrderItemResponseUTA {
-  code?: string;
-  msg?: string;
-  orderId?: string;
-  clientOid?: string;
-  /** Timestamp when system completes order cancellation request (nanoseconds). Not supported for classic accounts */
-  ts?: number;
-}
-⋮----
-/** Timestamp when system completes order cancellation request (nanoseconds). Not supported for classic accounts */
-⋮----
-export interface BatchCancelOrdersResponseUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'ISOLATED' | 'CROSS' | 'MARGIN';
-  items: BatchCancelOrderItemResponseUTA[];
-}
-⋮----
-/** Batch cancel by symbol - Classic response (orderId list) */
-export interface BatchCancelOrdersBySymbolItemClassicUTA {
-  orderId: string;
-}
-⋮----
-/** Batch cancel by symbol - UTA response (full result per order) */
-export interface BatchCancelOrdersBySymbolItemUTA {
-  code?: string;
-  msg?: string;
-  orderId?: string;
-  ts?: number;
-  clientOid?: string | null;
-}
-⋮----
-export interface BatchCancelOrdersBySymbolResponseUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'MARGIN';
-  ts?: number;
-  items:
-    | BatchCancelOrdersBySymbolItemClassicUTA[]
-    | BatchCancelOrdersBySymbolItemUTA[];
-}
-⋮----
-export interface DCPResponseUTA {
-  tradeType: 'SPOT' | 'FUTURES' | 'MARGIN';
-  symbol: string[]; // Empty means effective for all symbols
-  systemTime: number; // Time when system received request (in seconds)
-  triggerTime: number; // Trigger cancellation time (in seconds)
-}
-⋮----
-symbol: string[]; // Empty means effective for all symbols
-systemTime: number; // Time when system received request (in seconds)
-triggerTime: number; // Trigger cancellation time (in seconds)
-⋮----
-/**
- * Position Response Types
- */
-⋮----
-export interface PositionUTA {
-  id: string;
-  symbol: string;
-  marginMode: 'CROSS' | 'ISOLATED';
-  size: string; // Positive = long, negative = short
-  entryPrice: string;
-  positionValue: string;
-  /** Margin occupied by the futures position */
-  positionMargin: string;
-  markPrice: string;
-  leverage: string;
-  unrealizedPnL: string;
-  realizedPnL: string;
-  initialMargin: string;
-  mmr: string; // Maintenance Margin Rate
-  maintenanceMargin: string;
-  /** Timestamp when position was first opened (nanoseconds, standardized as of 2026.01.12) */
-  creationTime: number;
-  /** Latest position update time (leverage/size changes). Added 2026.08.12 */
-  updateTime?: number;
-  /** Estimated liquidation price (as of 2026.04.09) */
-  liquidationPrice: string;
-  /** ADL ranking percentile (0.12 = 12%). Added 2026.05.15 */
-  adlPercentage: string;
-  /** Isolated futures risk ratio (0.65 = 65%). Empty for cross margin positions */
-  riskRatio: string;
-}
-⋮----
-size: string; // Positive = long, negative = short
-⋮----
-/** Margin occupied by the futures position */
-⋮----
-mmr: string; // Maintenance Margin Rate
-⋮----
-/** Timestamp when position was first opened (nanoseconds, standardized as of 2026.01.12) */
-⋮----
-/** Latest position update time (leverage/size changes). Added 2026.08.12 */
-⋮----
-/** Estimated liquidation price (as of 2026.04.09) */
-⋮----
-/** ADL ranking percentile (0.12 = 12%). Added 2026.05.15 */
-⋮----
-/** Isolated futures risk ratio (0.65 = 65%). Empty for cross margin positions */
-⋮----
-export interface PositionHistoryItemUTA {
-  closeId: string;
-  symbol: string;
-  marginMode: 'CROSS' | 'ISOLATED';
-  side: 'LONG' | 'SHORT';
-  entryPrice: string;
-  closePrice: string;
-  avgClosePrice: string;
-  maxSize: string;
-  leverage: string;
-  realizedPnL: string;
-  fee: string;
-  tax: string;
-  fundingFee: string;
-  /** Position opening timestamp (nanoseconds, standardized as of 2026.01.12) */
-  creationTime: number;
-  /** Position closing timestamp (nanoseconds, standardized as of 2026.01.12) */
-  closingTime: number;
-}
-⋮----
-/** Position opening timestamp (nanoseconds, standardized as of 2026.01.12) */
-⋮----
-/** Position closing timestamp (nanoseconds, standardized as of 2026.01.12) */
-⋮----
-export interface GetPositionsHistoryResponseUTA {
-  items: PositionHistoryItemUTA[];
-  lastId?: number;
-}
-⋮----
-/** Row from Get Third-Party Custody Currencies */
-export interface ThirdPartyCustodyCurrencyUTA {
-  custodian: string;
-  currency: string;
-  precision: number;
-}
-⋮----
-/** Row from Get Third-Party Custody Account Currency Limits */
-export interface ThirdPartyCustodyQuotaUTA {
-  custodian: string;
-  currency: string;
-  /** Remaining custodial quota (shared across custodian sub-accounts under master) */
-  custodyQuota: string;
-}
-⋮----
-/** Remaining custodial quota (shared across custodian sub-accounts under master) */
-⋮----
-export interface PositionTierUTA {
-  symbol: string;
-  tier: number; // Current tier of user
-  maxSize: string; // Upper limit (USDT) (included)
-  minSize: string; // Lower limit (USDT)
-  maxLeverage: string;
-  initialMarginRate: string;
-  maintainMarginRate: string;
-}
-⋮----
-tier: number; // Current tier of user
-maxSize: string; // Upper limit (USDT) (included)
-minSize: string; // Lower limit (USDT)
-⋮----
-export interface BatchModifyMarginModeItemUTA {
-  symbol: string;
-  marginMode: string;
-  code: string;
-  msg: string;
-}
-⋮----
-export interface BatchModifyMarginModeResponseUTA {
-  ts: number;
-  items: BatchModifyMarginModeItemUTA[];
-}
-⋮----
-export interface ModifyIsolatedFuturesMarginResponseUTA {
-  ts: number;
-}
-⋮----
-export interface RateLimitItemUTA {
-  uid: string;
-  rate: number;
-}
-⋮----
-export interface GetRateLimitResponseUTA {
-  list: RateLimitItemUTA[];
-}
-⋮----
-export interface GetRateLimitCapResponseUTA {
-  vipLevel: number;
-  mainRateLimit: number;
-  subRateLimit: number;
-  allocatedQuota: number;
-  remainingQuota: number;
-  defaultQuota: number;
-}
-⋮----
-export interface SetSubAccountsRateLimitResultUTA {
-  uid: string;
-  rate: number;
-  code: string;
-  msg: string;
-}
-⋮----
-export interface SetSubAccountsRateLimitResponseUTA {
-  items: SetSubAccountsRateLimitResultUTA[];
-}
-⋮----
-export interface SubAccountListItemUTA {
-  userId: string | null;
-  uid: number;
-  subName: string;
-  status: number;
-  type: number;
-  access: string;
-  createdAt: number;
-  remarks?: string;
-  tradeTypes: string[];
-  openedTradeTypes: string[];
-}
-⋮----
-export interface GetSubAccountListResponseUTA {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: SubAccountListItemUTA[];
-}
-⋮----
-export interface SetKcsFeeDeductionResponseUTA {
-  enabled: boolean;
-}
-⋮----
-export interface DepositHistoryItemUTA {
-  id: string;
-  currency: string;
-  status: string;
-  address: string;
-  memo?: string;
-  isInner: boolean;
-  amount: string;
-  fee: string;
-  walletTxId?: string | null;
-  createdAt: number;
-  updatedAt: number;
-  remark?: string;
-  arrears?: boolean;
-  subStatus?: string | null;
-  url?: string | null;
-  statusRemark?: string;
-  preConfirms?: number;
-  confirms?: number;
-  currentConfirms?: number;
-  chainId?: string;
-}
-⋮----
-export interface GetDepositHistoryResponseUTA {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: DepositHistoryItemUTA[];
-}
-⋮----
-export interface WithdrawalHistoryItemUTA {
-  id: string;
-  currency: string;
-  status: string;
-  address: string;
-  memo?: string;
-  isInner: boolean;
-  amount: string;
-  fee: string;
-  failureReason?: string;
-  failureReasonMsg?: string | null;
-  walletTxId?: string | null;
-  createdAt: number;
-  updatedAt: number;
-  remark?: string;
-  subStatus?: string | null;
-  chainId?: string;
-}
-⋮----
-export interface GetWithdrawalHistoryResponseUTA {
-  currentPage: number;
-  pageSize: number;
-  totalNum: number;
-  totalPage: number;
-  items: WithdrawalHistoryItemUTA[];
-}
-⋮----
-export interface InterestRateIndexItemUTA {
-  ts: number;
-  symbol: string;
-  interestRate: string;
-}
-⋮----
-export interface GetInterestRateIndexResponseUTA {
-  items: InterestRateIndexItemUTA[];
-  lastId?: number;
-}
-⋮----
-export interface GetTradeStatisticsResponseUTA {
-  spot: { turnoverOf24h: string };
-  futures: { turnoverOf24h: string };
-}
-⋮----
-export interface GetCallAuctionInfoResponseUTA {
-  symbol: string;
-  estimatedPrice: string;
-  estimatedSize: string;
-  sellOrderRangeLowPrice: string;
-  sellOrderRangeHighPrice: string;
-  buyOrderRangeLowPrice: string;
-  buyOrderRangeHighPrice: string;
-  time: number;
-}
-
-================
 File: src/types/request/uta-types.ts
 ================
 /**
@@ -17718,6 +17811,7 @@ export interface AddSubAccountRequestUTA {
   subName: string;
   access: 'Spot' | 'Futures' | 'Margin' | string;
   remarks?: string;
+  mode?: 'CLASSIC' | 'UNIFIED';
 }
 ⋮----
 export interface AddSubAccountApiRequestUTA {
