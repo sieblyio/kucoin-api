@@ -81,6 +81,32 @@ export interface WsUTAPositionPush {
 }
 
 /**
+ * UTA WebSocket private funding fee settlement channels. Added 2026.11.06.
+ * @see https://www.kucoin.com/docs-new/3470415w0
+ */
+export type WsUTAFundingFeeSettleTopic =
+  | 'fundingFeeSettle'
+  | 'fundingFeeSettleAll';
+
+export interface WsUTAFundingFeeSettlePushData {
+  s: string;
+  mp: string;
+  q: string;
+  mM: string;
+  sc: string;
+  ft: number;
+  ff: string;
+  fr: string;
+  pV: string;
+}
+
+export interface WsUTAFundingFeeSettlePush {
+  P: number;
+  T: WsUTAFundingFeeSettleTopic;
+  d: WsUTAFundingFeeSettlePushData;
+}
+
+/**
  * UTA WebSocket public Funding Fee channel (`channel: fundingFee`, FUTURES).
  * Added 2026.07.01.
  */

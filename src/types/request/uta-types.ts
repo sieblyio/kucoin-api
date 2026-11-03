@@ -339,6 +339,7 @@ export interface AddSubAccountRequestUTA {
   subName: string;
   access: 'Spot' | 'Futures' | 'Margin' | string;
   remarks?: string;
+  mode?: 'CLASSIC' | 'UNIFIED';
 }
 
 export interface AddSubAccountApiRequestUTA {

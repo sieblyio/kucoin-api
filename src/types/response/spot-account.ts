@@ -1,16 +1,12 @@
+/**
+ * Classic account summary V3 (2026.11.06).
+ * Replaces sub-account quantity fields with shared sub-account quota counts.
+ * @see https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-summary-info-v3
+ */
 export interface SpotAccountSummary {
   level: number;
-  subQuantity: number;
-  spotSubQuantity: number;
-  marginSubQuantity: number;
-  futuresSubQuantity: number;
-  optionSubQuantity: number;
-  maxSubQuantity: number;
-  maxDefaultSubQuantity: number;
-  maxSpotSubQuantity: number;
-  maxMarginSubQuantity: number;
-  maxFuturesSubQuantity: number;
-  maxOptionSubQuantity: number;
+  maxSharedSubCount: number;
+  usedSharedSubCount: number;
 }
 
 export interface Balances {

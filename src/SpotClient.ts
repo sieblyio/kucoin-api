@@ -337,12 +337,12 @@ export class SpotClient extends BaseRestClient {
    */
 
   /**
-   * Get Account Summary Info
+   * Get Account Summary Info (V3)
    *
-   * This endpoint can be used to obtain account summary information.
+   * Returns the VIP level and shared sub-account quota usage (2026.11.06).
    */
   getAccountSummary(): Promise<APISuccessResponse<SpotAccountSummary>> {
-    return this.getPrivate('api/v2/user-info');
+    return this.getPrivate('api/v3/user-info');
   }
 
   /**
