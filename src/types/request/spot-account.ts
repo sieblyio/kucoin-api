@@ -57,6 +57,7 @@ export interface CreateSubAccountRequest {
   remarks?: string;
   subName: string;
   access: string;
+  mode?: 'CLASSIC' | 'UNIFIED';
 }
 
 export interface CreateSubAccountAPIRequest {

@@ -74,7 +74,12 @@ export interface GetTradesRequestUTA {
 export interface GetOrderBookRequestUTA {
   tradeType: 'SPOT' | 'FUTURES';
   symbol: string;
-  limit: '20' | '50' | '100' | 'FULL';
+  /**
+   * Order book depth as a numeric string, or FULL for all levels.
+   * Rate limit weights: 1–20: 5; 21–100: 20; 101–500: 50; 501+ or FULL: 250.
+   * @see https://www.kucoin.com/docs-new/change-log (2026.11.02)
+   */
+  limit: '20' | '50' | '100' | 'FULL' | `${number}`;
   /**
    * Whether it is an RPI Order. Applicable to FUTURES only.
    * 0: noneRPI Orders (default)
@@ -334,6 +339,7 @@ export interface AddSubAccountRequestUTA {
   subName: string;
   access: 'Spot' | 'Futures' | 'Margin' | string;
   remarks?: string;
+  mode?: 'CLASSIC' | 'UNIFIED';
 }
 
 export interface AddSubAccountApiRequestUTA {

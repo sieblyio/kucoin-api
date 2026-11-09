@@ -13,6 +13,17 @@ export interface SpotAccountSummary {
   maxOptionSubQuantity: number;
 }
 
+/**
+ * Account summary V3 (2026.11.06).
+ * Returns shared sub-account quota counts instead of per-permission sub-account counts.
+ * @see https://www.kucoin.com/docs-new/rest/account-info/account-funding/get-account-summary-info-v3
+ */
+export interface SpotAccountSummaryV3 {
+  level: number;
+  maxSharedSubCount: number;
+  usedSharedSubCount: number;
+}
+
 export interface Balances {
   id: string;
   currency: string;

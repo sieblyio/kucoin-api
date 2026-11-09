@@ -117,6 +117,7 @@ import {
   DeleteSubAccountAPI,
   KYCRegion,
   SpotAccountSummary,
+  SpotAccountSummaryV3,
   SpotAccountTransaction,
   SpotAccountTransactions,
   SubAccountAPIInfo,
@@ -343,6 +344,16 @@ export class SpotClient extends BaseRestClient {
    */
   getAccountSummary(): Promise<APISuccessResponse<SpotAccountSummary>> {
     return this.getPrivate('api/v2/user-info');
+  }
+
+  /**
+   * Get Account Summary Info (V3)
+   *
+   * Returns the VIP level and shared sub-account quota usage, instead of the
+   * per-permission sub-account counts returned by V2 (2026.11.06).
+   */
+  getAccountSummaryV3(): Promise<APISuccessResponse<SpotAccountSummaryV3>> {
+    return this.getPrivate('api/v3/user-info');
   }
 
   /**
