@@ -6,7 +6,7 @@
 [![npm downloads](https://img.shields.io/npm/dt/kucoin-api)][1]
 [![last commit](https://img.shields.io/github/last-commit/sieblyio/kucoin-api)][1]
 [![Telegram](https://img.shields.io/badge/chat-on%20telegram-blue.svg)](https://t.me/nodetraders)
-[![KuCoin Tutorial](https://img.shields.io/badge/KuCoin%20Tutorial-siebly.io-blue)](https://siebly.io/sdk/kucoin/javascript/tutorial)
+[![KuCoin Documentation](https://img.shields.io/badge/KuCoin%20Documentation-siebly.io-blue)](https://sieblyio.github.io/docs/kucoin/)
 
 <p align="center">
   <a href="https://www.npmjs.com/package/kucoin-api">
@@ -43,8 +43,8 @@ Updated & performant JavaScript & Node.js SDK for the KuCoin REST APIs and WebSo
 - Heavy automated end-to-end testing with real API calls.
 - Proxy support via axios integration.
 - Active community support & collaboration in telegram: [Node.js Algo Traders](https://t.me/nodetraders).
-- QuickStart Guide: [Kucoin JavaScript QuickStart Guide](https://siebly.io/sdk/kucoin/javascript)
-- KuCoin JavaScript Tutorial: [KuCoin JavaScript REST API and WebSocket Tutorial](https://siebly.io/sdk/kucoin/javascript/tutorial)
+- QuickStart Guide: [Kucoin JavaScript QuickStart Guide](https://sieblyio.github.io/docs/kucoin/getting-started)
+- [KuCoin SDK Documentation](https://sieblyio.github.io/docs/kucoin/)
 
 ## Table of Contents
 
