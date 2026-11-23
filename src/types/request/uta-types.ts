@@ -160,6 +160,35 @@ export interface GetServiceStatusRequestUTA {
  * Account Endpoints
  */
 
+export interface GetSmallBalanceCurrenciesRequestUTA {
+  accountType: 'FUNDING' | 'SPOT';
+}
+
+export interface ConvertSmallBalanceRequestUTA {
+  accountType: 'FUNDING' | 'SPOT';
+  /** Between 1 and 20 source currencies */
+  currencyList: string[];
+  /** Currently only KCS is supported. Default KCS */
+  targetCurrency?: 'KCS';
+  /** Client-supplied order ID, maximum 24 characters */
+  clientOrderId: string;
+}
+
+/** Provide at least one of orderId or clientOrderId. */
+export interface GetSmallBalanceOrderDetailRequestUTA {
+  orderId?: string;
+  /** Takes precedence over orderId. Maximum 24 characters */
+  clientOrderId?: string;
+}
+
+export interface GetSmallBalanceOrderHistoryRequestUTA {
+  accountType: 'FUNDING' | 'SPOT';
+  startAt?: number; // milliseconds
+  endAt?: number; // milliseconds
+  currentPage?: number; // Default 1
+  pageSize?: number; // Default 10, max 50
+}
+
 export interface GetClassicAccountRequestUTA {
   accountType: 'FUNDING' | 'SPOT' | 'FUTURES' | 'CROSS' | 'ISOLATED';
   accountSubtype?: string; // For ISOLATED (trading pair) or FUTURES (settlement currency)

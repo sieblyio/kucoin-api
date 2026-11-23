@@ -100,6 +100,7 @@ export interface SymbolUTA {
   feeCategory?: number | 'classA' | 'classB' | 'classC' | string;
   makerFeeCoefficient?: string;
   takerFeeCoefficient?: string;
+  /** Whether the instrument is marked as ST. Applicable to spot and futures. */
   st?: boolean;
   settlementCurrency?: string;
   contractType?: string;
@@ -333,6 +334,58 @@ export interface GetServiceStatusResponseUTA {
 /**
  * Account Response Types
  */
+
+export interface SmallBalanceCurrencyUTA {
+  currency: string;
+  amount: string;
+  /** Estimated KCS amount */
+  targetAmount: string;
+  /** Estimated fee in KCS */
+  feeAmount: string;
+}
+
+export interface GetSmallBalanceCurrenciesResponseUTA {
+  targetCurrency: string[];
+  /** Total estimated KCS amount */
+  totalTargetAmount?: string;
+  currencies: SmallBalanceCurrencyUTA[];
+}
+
+export interface SmallBalanceConversionItemUTA {
+  currency: string;
+  amount: string;
+  /** Converted KCS amount before fees */
+  targetAmount: string;
+  /** Fee in KCS */
+  feeAmount: string;
+  status: 'PROCESSING' | 'SUCCESS' | 'FAILURE';
+}
+
+export interface SmallBalanceOrderHistoryItemUTA {
+  orderId: string;
+  /** Historical orders may omit this value */
+  clientOrderId?: string;
+  accountType: 'FUNDING' | 'SPOT';
+  targetCurrency: 'KCS';
+  /** Net KCS amount after fees. Returns 0 while the order is UNFINISHED. */
+  totalTargetAmount: string;
+  status: 'UNFINISHED' | 'FINISHED';
+  /** Order creation timestamp in milliseconds */
+  orderTime: number;
+  items: SmallBalanceConversionItemUTA[];
+}
+
+export interface SmallBalanceOrderUTA extends SmallBalanceOrderHistoryItemUTA {
+  clientOrderId: string;
+}
+
+export interface GetSmallBalanceOrderHistoryResponseUTA {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: SmallBalanceOrderHistoryItemUTA[];
+}
 
 export interface AccountCurrencyUTA {
   currency: string;
