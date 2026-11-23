@@ -242,7 +242,7 @@ The SDK handles private request signing, connection-token requests, product-spec
 - SDK endpoint map: [KuCoin JavaScript endpoint reference](./endpointFunctionList.md)
 - Official API documentation: [KuCoin API](https://www.kucoin.com/docs-new/)
 - API authentication: [KuCoin authentication](https://www.kucoin.com/docs-new/authentication)
-- API rate limits: [KuCoin rate limits](https://www.kucoin.com/docs-new/rate-limit)
+- API rate limits: [Classic accounts](https://www.kucoin.com/docs-new/rate-limit-rule-classic) and [UTA](https://www.kucoin.com/docs-new/rate-limit-rule-uta)
 - Trading-system terms: [Siebly glossary](https://siebly.io/reference/glossary)
 - More JavaScript SDKs: [Siebly.io](https://siebly.io)
 
@@ -1646,7 +1646,7 @@ KuCoin rejects private requests when the client timestamp differs from server ti
 
 ### Respect rate limits
 
-Rate limits vary by product, permission, endpoint weight, account level, region, and connection type. Read the current [KuCoin rate-limit documentation](https://www.kucoin.com/docs-new/rate-limit) and monitor returned error details.
+Rate limits vary by product, permission, endpoint weight, account level, region, and connection type. Read the current rate-limit documentation for [Classic accounts](https://www.kucoin.com/docs-new/rate-limit-rule-classic) and [UTA](https://www.kucoin.com/docs-new/rate-limit-rule-uta), and monitor returned error details.
 
 Retry temporary network failures and rate-limit responses with bounded exponential backoff and jitter. Do not blindly retry an order after an ambiguous timeout. Query by `clientOid` or reconcile current order state first.
 
