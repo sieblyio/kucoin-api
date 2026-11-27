@@ -16,6 +16,7 @@ import type {
   BatchModifyMarginModeRequestUTA,
   BatchPlaceOrderRequestUTA,
   CancelOrderRequestUTA,
+  ConvertSmallBalanceRequestUTA,
   FlexTransferRequestUTA,
   GetAccountLedgerRequestUTA,
   GetAccountPositionTiersRequestUTA,
@@ -46,6 +47,9 @@ import type {
   GetPrivateFundingFeeHistoryRequestUTA,
   GetRateLimitRequestUTA,
   GetServiceStatusRequestUTA,
+  GetSmallBalanceCurrenciesRequestUTA,
+  GetSmallBalanceOrderDetailRequestUTA,
+  GetSmallBalanceOrderHistoryRequestUTA,
   GetSubAccountListRequestUTA,
   GetSubAccountRequestUTA,
   GetSymbolRequestUTA,
@@ -112,6 +116,8 @@ import type {
   GetRateLimitCapResponseUTA,
   GetRateLimitResponseUTA,
   GetServiceStatusResponseUTA,
+  GetSmallBalanceCurrenciesResponseUTA,
+  GetSmallBalanceOrderHistoryResponseUTA,
   GetSubAccountListResponseUTA,
   GetSubAccountResponseUTA,
   GetSymbolResponseUTA,
@@ -130,6 +136,7 @@ import type {
   PositionUTA,
   SetKcsFeeDeductionResponseUTA,
   SetSubAccountsRateLimitResponseUTA,
+  SmallBalanceOrderUTA,
   SubAccountTransferPermissionUTA,
   SubmitWithdrawResponseUTA,
   ThirdPartyCustodyCurrencyUTA,
@@ -733,6 +740,56 @@ export class UnifiedAPIClient extends BaseRestClient {
     params?: GetThirdPartyCustodyQuotaRequestUTA,
   ): Promise<APISuccessResponse<ThirdPartyCustodyQuotaUTA[]>> {
     return this.getPrivate('api/ua/v2/oes/custody-quota', params);
+  }
+
+  /**
+   * Get Small Balance Currencies
+   * Query currencies eligible for conversion to KCS. Requires General permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-currencies
+   */
+  getSmallBalanceCurrencies(
+    params: GetSmallBalanceCurrenciesRequestUTA,
+  ): Promise<APISuccessResponse<GetSmallBalanceCurrenciesResponseUTA>> {
+    return this.getPrivate('api/ua/v2/asset/small-balance/currencies', params);
+  }
+
+  /**
+   * Convert Small Balance
+   * Convert 1 to 20 source currencies into KCS. Requires Spot permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-convert
+   */
+  convertSmallBalance(
+    params: ConvertSmallBalanceRequestUTA,
+  ): Promise<APISuccessResponse<SmallBalanceOrderUTA>> {
+    return this.postPrivate('api/ua/v2/asset/small-balance/order', params);
+  }
+
+  /**
+   * Get Small Balance Convert Order Detail
+   * Query an order by orderId or clientOrderId. Requires General permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-order-detail
+   */
+  getSmallBalanceOrderDetail(
+    params: GetSmallBalanceOrderDetailRequestUTA,
+  ): Promise<APISuccessResponse<SmallBalanceOrderUTA>> {
+    return this.getPrivate(
+      'api/ua/v2/asset/small-balance/order/detail',
+      params,
+    );
+  }
+
+  /**
+   * Get Small Balance Convert Order History
+   * Query paginated conversion orders. Requires General permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-order-history
+   */
+  getSmallBalanceOrderHistory(
+    params: GetSmallBalanceOrderHistoryRequestUTA,
+  ): Promise<APISuccessResponse<GetSmallBalanceOrderHistoryResponseUTA>> {
+    return this.getPrivate(
+      'api/ua/v2/asset/small-balance/order/history',
+      params,
+    );
   }
 
   /**

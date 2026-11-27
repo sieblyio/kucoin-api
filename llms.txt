@@ -2801,6 +2801,117 @@ orderIdsList: ['order-id-1', 'order-id-2'], // Replace with actual order IDs
 // Start executing the example workflow
 
 ================
+File: examples/WebSockets/ws-private-pro-v2.ts
+================
+import {
+  WebsocketClient,
+  WS_KEY_MAP,
+  WsTopicRequest,
+} from '../../src/index.js';
+// import { DefaultLogger, WebsocketClient } from 'kucoin-api';
+// normally you should install this module via npm: `npm install kucoin-api`
+⋮----
+async function start()
+⋮----
+// Optional: inject a custom logger to override internal logging behaviour
+// const logger: typeof DefaultLogger = {
+//   ...DefaultLogger,
+//   trace: (...params) => {
+//     // Simple way to exclude certain messages from trace logs
+//     if (
+//       [
+//         'Sending ping',
+//         // 'Sending upstream ws message: ',
+//         'Received pong',
+//         'Decompressed message event from buffer',
+//       ].includes(params[0])
+//     ) {
+//       return;
+//     }
+//     console.log('trace', JSON.stringify(params, null, 2));
+//   },
+// };
+⋮----
+passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT your account password
+⋮----
+// logger,
+⋮----
+// Data received
+⋮----
+// Something happened, attempting to reconenct
+⋮----
+// Reconnect successful
+⋮----
+// Connection closed. If unexpected, expect reconnect -> reconnected.
+⋮----
+// Reply to a request, e.g. "subscribe"/"unsubscribe"/"authenticate"
+⋮----
+// throw new Error('res?');
+⋮----
+/**
+   * The below examples demonstrate consuming private V2 (Pro) WebSocket topics.
+   * For V1 private WebSocket examples, see ws-private-spot-v1.ts and ws-private-futures-v1.ts
+   */
+⋮----
+// Optional: await a connection to be ready before subscribing (this is not necessary)
+// await client.connect(WS_KEY_MAP.privateProV2);
+// console.log('connected');
+⋮----
+/**
+     * Structure your requests into the following format. The below example will be sent as per the example in the docs. The parameters are automatically merged into the request. Just follow the example below:
+     * {
+     *   "id": "1545910660739", // OPTIONAL
+     *   "action": "SUBSCRIBE", // or UNSUBSCRIBE
+     *   "channel":"orderAll", //
+     *   "tradeType": "SPOT" // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+     * }
+     *
+     * https://www.kucoin.com/docs-new/3470228w0
+     */
+⋮----
+/**
+       * Anything in the payload will be merged into the subscribe "request", allowing you to send misc parameters supported by the exchange.
+       * For more info on parameters, see: https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
+       */
+⋮----
+tradeType: 'SPOT', // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+⋮----
+// Or, subscribe to multiple topics at once:
+⋮----
+// Other markets for orderAll topic:
+// https://www.kucoin.com/docs-new/3470228w0
+⋮----
+tradeType: 'UNIFIED', // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+⋮----
+// Specific order updates for a given symbol:
+// https://www.kucoin.com/docs-new/3470228w0
+⋮----
+tradeType: 'SPOT', // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+⋮----
+// Futures positions:
+// https://www.kucoin.com/docs-new/3470233w0
+⋮----
+tradeType: 'FUTURES', //  FUTURES / UNIFIED
+⋮----
+tradeType: 'FUTURES', //  FUTURES / UNIFIED
+⋮----
+// Account balance updates:
+// https://www.kucoin.com/docs-new/3470231w0
+⋮----
+accountType: 'SPOT', // SPOT / ISOLATED / CROSS / FUTURES / UNIFIED
+⋮----
+// Execution/trade updates:
+// https://www.kucoin.com/docs-new/3470232w0
+⋮----
+tradeType: 'SPOT', // SPOT / ISOLATED / CROSS / FUTURES / UNIFIED
+⋮----
+// Liquidation warnings:
+// https://www.kucoin.com/docs-new/3470236w0
+⋮----
+// Leverage updates:
+// https://www.kucoin.com/docs-new/3470237w0
+
+================
 File: src/lib/websocket/frame-utils.ts
 ================
 /**
@@ -6020,40 +6131,37 @@ function setWsClientEventListeners(
 // Start trading
 
 ================
-File: examples/WebSockets/ws-private-pro-v2.ts
+File: examples/WebSockets/ws-public-spot-pro-v2.ts
 ================
+/* eslint-disable no-unused-vars */
 import {
   WebsocketClient,
   WS_KEY_MAP,
   WsTopicRequest,
 } from '../../src/index.js';
-// import { DefaultLogger, WebsocketClient } from 'kucoin-api';
+// import { DefaultLogger, WebsocketClient, WsTopicRequest } from 'kucoin-api';
 // normally you should install this module via npm: `npm install kucoin-api`
 ⋮----
 async function start()
 ⋮----
-// Optional: inject a custom logger to override internal logging behaviour
+// Optional: fully customise the logging experience by injecting a custom logger
 // const logger: typeof DefaultLogger = {
 //   ...DefaultLogger,
 //   trace: (...params) => {
-//     // Simple way to exclude certain messages from trace logs
 //     if (
 //       [
 //         'Sending ping',
-//         // 'Sending upstream ws message: ',
+//         'Sending upstream ws message: ',
 //         'Received pong',
-//         'Decompressed message event from buffer',
 //       ].includes(params[0])
 //     ) {
 //       return;
 //     }
-//     console.log('trace', JSON.stringify(params, null, 2));
+//     console.log('trace', params);
 //   },
 // };
 ⋮----
-passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT your account password
-⋮----
-// logger,
+// const client = new WebsocketClient({}, logger);
 ⋮----
 // Data received
 ⋮----
@@ -6068,24 +6176,24 @@ passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT yo
 // throw new Error('res?');
 ⋮----
 /**
-   * The below examples demonstrate consuming private V2 (Pro) WebSocket topics.
-   * For V1 private WebSocket examples, see ws-private-spot-v1.ts and ws-private-futures-v1.ts
+   * The following example demonstrates the ways to consume data from the V2 (Pro) WebSockets. For the V1 examples, ws-private-spot-v1.ts
    */
 ⋮----
 // Optional: await a connection to be ready before subscribing (this is not necessary)
-// await client.connect(WS_KEY_MAP.privateProV2);
-// console.log('connected');
+// await client.connect(WS_KEY_MAP.spotPublicProV2);
 ⋮----
 /**
      * Structure your requests into the following format. The below example will be sent as per the example in the docs. The parameters are automatically merged into the request. Just follow the example below:
      * {
-     *   "id": "1545910660739", // OPTIONAL
-     *   "action": "SUBSCRIBE", // or UNSUBSCRIBE
-     *   "channel":"orderAll", //
-     *   "tradeType": "SPOT" // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+     *    "id": "1545910660739", // automatically generated by SDK
+     *    "action": "SUBSCRIBE", // automatically added by SDK
+     *    "channel":"kline",
+     *    "tradeType": "SPOT",       // SPOT / FUTURES
+     *    "symbol": "BTC-USDT",
+     *    "interval": "1min"
      * }
      *
-     * https://www.kucoin.com/docs-new/3470228w0
+     * https://www.kucoin.com/docs-new/3470223w0
      */
 ⋮----
 /**
@@ -6093,42 +6201,31 @@ passphrase: process.env.API_PASSPHRASE || 'apiPassPhraseHere', // This is NOT yo
        * For more info on parameters, see: https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
        */
 ⋮----
-tradeType: 'SPOT', // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+// this needs to match the WsKey below.
+// tradeType: SPOT ==> spotPublicProV2
+// tradeType: FUTURES ==> futuresPublicProV2
 ⋮----
-// Or, subscribe to multiple topics at once:
+/**
+     * Or, send an array of structured objects with parameters, if you wanted to send multiple in one request
+     *
+     */
 ⋮----
-// Other markets for orderAll topic:
-// https://www.kucoin.com/docs-new/3470228w0
+// BTCUSDT tickers for spot market
+// https://www.kucoin.com/docs-new/3470222w0
 ⋮----
-tradeType: 'UNIFIED', // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+// Multi-symbol ticker: use `symbols` instead of `symbol`
 ⋮----
-// Specific order updates for a given symbol:
-// https://www.kucoin.com/docs-new/3470228w0
+// BTCUSDT orderbook updates for spot market
+// https://www.kucoin.com/docs-new/3470221w0
 ⋮----
-tradeType: 'SPOT', // SPOT / FUTURES / ISOLATED / CROSS / UNIFIED
+depth: '5', // 1 / 5 / 50 / increment
+rpiFilter: 0, // 0：Only NoneRPI orders [Default]  1(Only Support Futures)：NoneRPI+ RPI Orders. When rpiFilter=1, "depth" only supports 5/50.
 ⋮----
-// Futures positions:
-// https://www.kucoin.com/docs-new/3470233w0
+// BTCUSDT trades for spot market
+// https://www.kucoin.com/docs-new/3470224w0
 ⋮----
-tradeType: 'FUTURES', //  FUTURES / UNIFIED
-⋮----
-tradeType: 'FUTURES', //  FUTURES / UNIFIED
-⋮----
-// Account balance updates:
-// https://www.kucoin.com/docs-new/3470231w0
-⋮----
-accountType: 'SPOT', // SPOT / ISOLATED / CROSS / FUTURES / UNIFIED
-⋮----
-// Execution/trade updates:
-// https://www.kucoin.com/docs-new/3470232w0
-⋮----
-tradeType: 'SPOT', // SPOT / ISOLATED / CROSS / FUTURES / UNIFIED
-⋮----
-// Liquidation warnings:
-// https://www.kucoin.com/docs-new/3470236w0
-⋮----
-// Leverage updates:
-// https://www.kucoin.com/docs-new/3470237w0
+// UTA public Call Auction Info channel
+// https://www.kucoin.com/docs-new/3470268w0
 
 ================
 File: examples/kucoin-FUTURES-examples-nodejs.md
@@ -8990,9 +9087,8 @@ File: .nvmrc
 v24.22.3
 
 ================
-File: examples/WebSockets/ws-public-spot-pro-v2.ts
+File: examples/WebSockets/ws-public-futures-pro-v2.ts
 ================
-/* eslint-disable no-unused-vars */
 import {
   WebsocketClient,
   WS_KEY_MAP,
@@ -9012,6 +9108,7 @@ async function start()
 //         'Sending ping',
 //         'Sending upstream ws message: ',
 //         'Received pong',
+//         'Decompressed message event from buffer',
 //       ].includes(params[0])
 //     ) {
 //       return;
@@ -9035,11 +9132,11 @@ async function start()
 // throw new Error('res?');
 ⋮----
 /**
-   * The following example demonstrates the ways to consume data from the V2 (Pro) WebSockets. For the V1 examples, ws-private-spot-v1.ts
+   * The following example demonstrates the ways to consume data from the V2 (Pro) WebSockets. For the V1 examples, ws-public-futures-v1.ts
    */
 ⋮----
 // Optional: await a connection to be ready before subscribing (this is not necessary)
-// await client.connect(WS_KEY_MAP.spotPublicProV2);
+// await client.connect(WS_KEY_MAP.futuresPublicProV2);
 ⋮----
 /**
      * Structure your requests into the following format. The below example will be sent as per the example in the docs. The parameters are automatically merged into the request. Just follow the example below:
@@ -9047,8 +9144,8 @@ async function start()
      *    "id": "1545910660739", // automatically generated by SDK
      *    "action": "SUBSCRIBE", // automatically added by SDK
      *    "channel":"kline",
-     *    "tradeType": "SPOT",       // SPOT / FUTURES
-     *    "symbol": "BTC-USDT",
+     *    "tradeType": "FUTURES",       // SPOT / FUTURES
+     *    "symbol": "XBTUSDTM",
      *    "interval": "1min"
      * }
      *
@@ -9069,22 +9166,28 @@ async function start()
      *
      */
 ⋮----
-// BTCUSDT tickers for spot market
+// BTCUSDT tickers for FUTURES market
 // https://www.kucoin.com/docs-new/3470222w0
 ⋮----
-// Multi-symbol ticker: use `symbols` instead of `symbol`
-⋮----
-// BTCUSDT orderbook updates for spot market
+// BTCUSDT orderbook updates for FUTURES market
 // https://www.kucoin.com/docs-new/3470221w0
 ⋮----
-depth: '5', // 1 / 5 / 50 / increment
+depth: '5', // 1 / 5 / 50 / increment / increment@10ms (2026.06.17: snapshot + 500-level, 10ms batch)
 rpiFilter: 0, // 0：Only NoneRPI orders [Default]  1(Only Support Futures)：NoneRPI+ RPI Orders. When rpiFilter=1, "depth" only supports 5/50.
 ⋮----
 // BTCUSDT trades for spot market
 // https://www.kucoin.com/docs-new/3470224w0
 ⋮----
-// UTA public Call Auction Info channel
-// https://www.kucoin.com/docs-new/3470268w0
+// UTA public Funding Fee channel
+// https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
+⋮----
+// UTA V2 public Funding Fee Rate (`symbols` for multiple contracts, 2026.08.27)
+// https://www.kucoin.com/docs-new/3470357w0
+⋮----
+// UTA V2 public All Funding Fee Rates
+// https://www.kucoin.com/docs-new/3470412w0
+⋮----
+// UTA public Mark Price channel
 
 ================
 File: src/lib/BaseRestClient.ts
@@ -11081,109 +11184,6 @@ updateAutoDepositStatus(params: {
     symbol: string;
     status: boolean;
   }): Promise<APISuccessResponse<any>>
-
-================
-File: examples/WebSockets/ws-public-futures-pro-v2.ts
-================
-import {
-  WebsocketClient,
-  WS_KEY_MAP,
-  WsTopicRequest,
-} from '../../src/index.js';
-// import { DefaultLogger, WebsocketClient, WsTopicRequest } from 'kucoin-api';
-// normally you should install this module via npm: `npm install kucoin-api`
-⋮----
-async function start()
-⋮----
-// Optional: fully customise the logging experience by injecting a custom logger
-// const logger: typeof DefaultLogger = {
-//   ...DefaultLogger,
-//   trace: (...params) => {
-//     if (
-//       [
-//         'Sending ping',
-//         'Sending upstream ws message: ',
-//         'Received pong',
-//         'Decompressed message event from buffer',
-//       ].includes(params[0])
-//     ) {
-//       return;
-//     }
-//     console.log('trace', params);
-//   },
-// };
-⋮----
-// const client = new WebsocketClient({}, logger);
-⋮----
-// Data received
-⋮----
-// Something happened, attempting to reconenct
-⋮----
-// Reconnect successful
-⋮----
-// Connection closed. If unexpected, expect reconnect -> reconnected.
-⋮----
-// Reply to a request, e.g. "subscribe"/"unsubscribe"/"authenticate"
-⋮----
-// throw new Error('res?');
-⋮----
-/**
-   * The following example demonstrates the ways to consume data from the V2 (Pro) WebSockets. For the V1 examples, ws-public-futures-v1.ts
-   */
-⋮----
-// Optional: await a connection to be ready before subscribing (this is not necessary)
-// await client.connect(WS_KEY_MAP.futuresPublicProV2);
-⋮----
-/**
-     * Structure your requests into the following format. The below example will be sent as per the example in the docs. The parameters are automatically merged into the request. Just follow the example below:
-     * {
-     *    "id": "1545910660739", // automatically generated by SDK
-     *    "action": "SUBSCRIBE", // automatically added by SDK
-     *    "channel":"kline",
-     *    "tradeType": "FUTURES",       // SPOT / FUTURES
-     *    "symbol": "XBTUSDTM",
-     *    "interval": "1min"
-     * }
-     *
-     * https://www.kucoin.com/docs-new/3470223w0
-     */
-⋮----
-/**
-       * Anything in the payload will be merged into the subscribe "request", allowing you to send misc parameters supported by the exchange.
-       * For more info on parameters, see: https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
-       */
-⋮----
-// this needs to match the WsKey below.
-// tradeType: SPOT ==> spotPublicProV2
-// tradeType: FUTURES ==> futuresPublicProV2
-⋮----
-/**
-     * Or, send an array of structured objects with parameters, if you wanted to send multiple in one request
-     *
-     */
-⋮----
-// BTCUSDT tickers for FUTURES market
-// https://www.kucoin.com/docs-new/3470222w0
-⋮----
-// BTCUSDT orderbook updates for FUTURES market
-// https://www.kucoin.com/docs-new/3470221w0
-⋮----
-depth: '5', // 1 / 5 / 50 / increment / increment@10ms (2026.06.17: snapshot + 500-level, 10ms batch)
-rpiFilter: 0, // 0：Only NoneRPI orders [Default]  1(Only Support Futures)：NoneRPI+ RPI Orders. When rpiFilter=1, "depth" only supports 5/50.
-⋮----
-// BTCUSDT trades for spot market
-// https://www.kucoin.com/docs-new/3470224w0
-⋮----
-// UTA public Funding Fee channel
-// https://www.kucoin.com/docs-new/websocket-api/base-info/introduction-uta#5-subscribe
-⋮----
-// UTA V2 public Funding Fee Rate (`symbols` for multiple contracts, 2026.08.27)
-// https://www.kucoin.com/docs-new/3470357w0
-⋮----
-// UTA V2 public All Funding Fee Rates
-// https://www.kucoin.com/docs-new/3470412w0
-⋮----
-// UTA public Mark Price channel
 
 ================
 File: src/lib/requestUtils.ts
@@ -14035,6 +14035,7 @@ export interface SymbolUTA {
   feeCategory?: number | 'classA' | 'classB' | 'classC' | string;
   makerFeeCoefficient?: string;
   takerFeeCoefficient?: string;
+  /** Whether the instrument is marked as ST. Applicable to spot and futures. */
   st?: boolean;
   settlementCurrency?: string;
   contractType?: string;
@@ -14083,6 +14084,8 @@ export interface SymbolUTA {
 }
 ⋮----
 /** UTA V2: classA / classB / classC. Numeric 1/2/3 remains on older payloads. */
+⋮----
+/** Whether the instrument is marked as ST. Applicable to spot and futures. */
 ⋮----
 /**
    * Unit size. As of 2026.01.12:
@@ -14320,6 +14323,74 @@ export interface GetServiceStatusResponseUTA {
 /**
  * Account Response Types
  */
+⋮----
+export interface SmallBalanceCurrencyUTA {
+  currency: string;
+  amount: string;
+  /** Estimated KCS amount */
+  targetAmount: string;
+  /** Estimated fee in KCS */
+  feeAmount: string;
+}
+⋮----
+/** Estimated KCS amount */
+⋮----
+/** Estimated fee in KCS */
+⋮----
+export interface GetSmallBalanceCurrenciesResponseUTA {
+  targetCurrency: string[];
+  /** Total estimated KCS amount */
+  totalTargetAmount?: string;
+  currencies: SmallBalanceCurrencyUTA[];
+}
+⋮----
+/** Total estimated KCS amount */
+⋮----
+export interface SmallBalanceConversionItemUTA {
+  currency: string;
+  amount: string;
+  /** Converted KCS amount before fees */
+  targetAmount: string;
+  /** Fee in KCS */
+  feeAmount: string;
+  status: 'PROCESSING' | 'SUCCESS' | 'FAILURE';
+}
+⋮----
+/** Converted KCS amount before fees */
+⋮----
+/** Fee in KCS */
+⋮----
+export interface SmallBalanceOrderHistoryItemUTA {
+  orderId: string;
+  /** Historical orders may omit this value */
+  clientOrderId?: string;
+  accountType: 'FUNDING' | 'SPOT';
+  targetCurrency: 'KCS';
+  /** Net KCS amount after fees. Returns 0 while the order is UNFINISHED. */
+  totalTargetAmount: string;
+  status: 'UNFINISHED' | 'FINISHED';
+  /** Order creation timestamp in milliseconds */
+  orderTime: number;
+  items: SmallBalanceConversionItemUTA[];
+}
+⋮----
+/** Historical orders may omit this value */
+⋮----
+/** Net KCS amount after fees. Returns 0 while the order is UNFINISHED. */
+⋮----
+/** Order creation timestamp in milliseconds */
+⋮----
+export interface SmallBalanceOrderUTA extends SmallBalanceOrderHistoryItemUTA {
+  clientOrderId: string;
+}
+⋮----
+export interface GetSmallBalanceOrderHistoryResponseUTA {
+  currentPage: number;
+  pageSize: number;
+  totalNum: number;
+  totalPage: number;
+  items: SmallBalanceOrderHistoryItemUTA[];
+}
 ⋮----
 export interface AccountCurrencyUTA {
   currency: string;
@@ -17763,6 +17834,48 @@ export interface GetServiceStatusRequestUTA {
  * Account Endpoints
  */
 ⋮----
+export interface GetSmallBalanceCurrenciesRequestUTA {
+  accountType: 'FUNDING' | 'SPOT';
+}
+⋮----
+export interface ConvertSmallBalanceRequestUTA {
+  accountType: 'FUNDING' | 'SPOT';
+  /** Between 1 and 20 source currencies */
+  currencyList: string[];
+  /** Currently only KCS is supported. Default KCS */
+  targetCurrency?: 'KCS';
+  /** Client-supplied order ID, maximum 24 characters */
+  clientOrderId: string;
+}
+⋮----
+/** Between 1 and 20 source currencies */
+⋮----
+/** Currently only KCS is supported. Default KCS */
+⋮----
+/** Client-supplied order ID, maximum 24 characters */
+⋮----
+/** Provide at least one of orderId or clientOrderId. */
+export interface GetSmallBalanceOrderDetailRequestUTA {
+  orderId?: string;
+  /** Takes precedence over orderId. Maximum 24 characters */
+  clientOrderId?: string;
+}
+⋮----
+/** Takes precedence over orderId. Maximum 24 characters */
+⋮----
+export interface GetSmallBalanceOrderHistoryRequestUTA {
+  accountType: 'FUNDING' | 'SPOT';
+  startAt?: number; // milliseconds
+  endAt?: number; // milliseconds
+  currentPage?: number; // Default 1
+  pageSize?: number; // Default 10, max 50
+}
+⋮----
+startAt?: number; // milliseconds
+endAt?: number; // milliseconds
+currentPage?: number; // Default 1
+pageSize?: number; // Default 10, max 50
+⋮----
 export interface GetClassicAccountRequestUTA {
   accountType: 'FUNDING' | 'SPOT' | 'FUTURES' | 'CROSS' | 'ISOLATED';
   accountSubtype?: string; // For ISOLATED (trading pair) or FUTURES (settlement currency)
@@ -18453,7 +18566,10 @@ Updated & performant JavaScript & Node.js SDK for the KuCoin REST APIs and WebSo
     - [KuCoin EU & Other Regions](#kucoin-eu--other-regions)
 - [Customise Logging](#customise-logging)
 - [Browser/Frontend Usage](#browserfrontend-usage)
-  - [Webpack](#webpack)
+  - [Vite and React](#vite-and-react)
+  - [Next.js and server-side requests](#nextjs-and-server-side-requests)
+  - [React Native and Expo](#react-native-and-expo)
+  - [Standalone Webpack bundle](#standalone-webpack-bundle)
 - [LLMs & AI](#use-with-llms--ai)
 - [Used By](#used-by)
 - [Contributions & Thanks](#contributions--thanks)
@@ -18890,15 +19006,37 @@ const ws = new WebsocketClient(
 
 ## Browser/Frontend Usage
 
-### Webpack
+The npm package includes ES module and CommonJS builds. You do not need to build the SDK's standalone Webpack bundle to use it in a frontend project. Choose the setup for your application below.
 
-Build a bundle using webpack:
+### Vite and React
 
-- `npm install`
-- `npm run build`
-- `npm run pack`
+Use the [Vite guide](https://sieblyio.github.io/docs/kucoin/environments/vite.html) or [React guide](https://sieblyio.github.io/docs/kucoin/environments/react.html) for a complete public market-data project that imports `kucoin-api` from npm.
 
-The bundle can be found in `dist/`. Altough usage should be largely consistent, smaller differences will exist. Documentation is still TODO.
+Keep the supplied bundler configuration with the example: it provides EventEmitter and replaces the SDK's Node-only `https.Agent` import with a browser module that rejects agent construction. Omit `keepAlive` in browsers, which manage connections themselves. These browser examples use public KuCoin market data. Keep API credentials in a secure server-side environment and make authenticated calls there.
+
+Browser REST requests also depend on KuCoin's CORS policy. If a request is blocked, call the SDK through your application's server route instead. A development proxy does not solve CORS for a deployed application.
+
+### Next.js and server-side requests
+
+The [Next.js guide](https://sieblyio.github.io/docs/kucoin/environments/next.html) runs the SDK in a Node.js Route Handler and returns the result to the frontend. Use this pattern when requests need credentials or cannot be made directly from the browser.
+
+### React Native and Expo
+
+Follow the [Expo guide](https://sieblyio.github.io/docs/kucoin/environments/expo.html) for its Metro configuration and required polyfills, including EventEmitter, Buffer, HTTP, HTTPS and URL support. Browser bundler configuration is not interchangeable with Metro configuration. The example uses public KuCoin market data; keep authenticated operations on your server.
+
+### Standalone Webpack bundle
+
+If you need a standalone UMD bundle rather than npm imports in your application, the SDK repository includes a [Webpack configuration](./webpack/webpack.config.cjs). From a checkout of this repository:
+
+```sh
+npm install
+npm run build
+npm run pack
+```
+
+The configuration writes `dist/kucoinapi.js` with the `kucoinapi` global name. It disables Node's `http` and `https` modules; omit `keepAlive` in browsers. For custom Webpack setups that need Node `crypto` and `stream` compatibility, configure `crypto-browserify` and `stream-browserify` polyfills, respectively. The SDK's current signing implementation uses the Web Crypto API.
+
+This is a separate packaging option, not a required step for the framework guides above. Browser-specific configuration and API access restrictions still apply.
 
 ## Use with LLMs & AI
 
@@ -18975,6 +19113,7 @@ import type {
   BatchModifyMarginModeRequestUTA,
   BatchPlaceOrderRequestUTA,
   CancelOrderRequestUTA,
+  ConvertSmallBalanceRequestUTA,
   FlexTransferRequestUTA,
   GetAccountLedgerRequestUTA,
   GetAccountPositionTiersRequestUTA,
@@ -19005,6 +19144,9 @@ import type {
   GetPrivateFundingFeeHistoryRequestUTA,
   GetRateLimitRequestUTA,
   GetServiceStatusRequestUTA,
+  GetSmallBalanceCurrenciesRequestUTA,
+  GetSmallBalanceOrderDetailRequestUTA,
+  GetSmallBalanceOrderHistoryRequestUTA,
   GetSubAccountListRequestUTA,
   GetSubAccountRequestUTA,
   GetSymbolRequestUTA,
@@ -19071,6 +19213,8 @@ import type {
   GetRateLimitCapResponseUTA,
   GetRateLimitResponseUTA,
   GetServiceStatusResponseUTA,
+  GetSmallBalanceCurrenciesResponseUTA,
+  GetSmallBalanceOrderHistoryResponseUTA,
   GetSubAccountListResponseUTA,
   GetSubAccountResponseUTA,
   GetSymbolResponseUTA,
@@ -19089,6 +19233,7 @@ import type {
   PositionUTA,
   SetKcsFeeDeductionResponseUTA,
   SetSubAccountsRateLimitResponseUTA,
+  SmallBalanceOrderUTA,
   SubAccountTransferPermissionUTA,
   SubmitWithdrawResponseUTA,
   ThirdPartyCustodyCurrencyUTA,
@@ -19572,6 +19717,42 @@ getThirdPartyCustodyQuota(
   ): Promise<APISuccessResponse<ThirdPartyCustodyQuotaUTA[]>>
 ⋮----
 /**
+   * Get Small Balance Currencies
+   * Query currencies eligible for conversion to KCS. Requires General permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-currencies
+   */
+getSmallBalanceCurrencies(
+    params: GetSmallBalanceCurrenciesRequestUTA,
+  ): Promise<APISuccessResponse<GetSmallBalanceCurrenciesResponseUTA>>
+⋮----
+/**
+   * Convert Small Balance
+   * Convert 1 to 20 source currencies into KCS. Requires Spot permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-convert
+   */
+convertSmallBalance(
+    params: ConvertSmallBalanceRequestUTA,
+  ): Promise<APISuccessResponse<SmallBalanceOrderUTA>>
+⋮----
+/**
+   * Get Small Balance Convert Order Detail
+   * Query an order by orderId or clientOrderId. Requires General permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-order-detail
+   */
+getSmallBalanceOrderDetail(
+    params: GetSmallBalanceOrderDetailRequestUTA,
+  ): Promise<APISuccessResponse<SmallBalanceOrderUTA>>
+⋮----
+/**
+   * Get Small Balance Convert Order History
+   * Query paginated conversion orders. Requires General permission.
+   * @see https://www.kucoin.com/docs-new/v2/rest/ua/small-balance-order-history
+   */
+getSmallBalanceOrderHistory(
+    params: GetSmallBalanceOrderHistoryRequestUTA,
+  ): Promise<APISuccessResponse<GetSmallBalanceOrderHistoryResponseUTA>>
+⋮----
+/**
    *
    * REST - Unified Trading Account - Orders
    *
@@ -19865,7 +20046,7 @@ File: package.json
 ================
 {
   "name": "kucoin-api",
-  "version": "2.6.10",
+  "version": "2.6.11",
   "description": "Complete & robust JavaScript SDK for Kucoin's REST APIs and WebSockets, with TypeScript & strong end to end tests.",
   "scripts": {
     "clean": "rm -rf dist",
